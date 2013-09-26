@@ -1,0 +1,2 @@
+2013-05-07 00:28:30 - QUERY -> EXEC -> 0.00296497 -> SHOW COLUMNS FROM `table`;
+2013-05-07 00:28:30 - ERROR -> NO -> 1064 - DESC -> You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '!@#$' at line 1
