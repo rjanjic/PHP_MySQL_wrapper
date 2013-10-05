@@ -556,7 +556,7 @@ class MySQL_wrapper {
 	 * @param 	boolean 	$web 	- HTML (TRUE) or Plaint text
 	 */
 	function error($msg, $web = FALSE) {
-		if ($this->displayError) {
+		if ($this->displayError || $this->logErrors) {
 			if ($this->link) {
 				$this->error = mysql_error($this->link);
 				$this->errorNo = mysql_errno($this->link);
@@ -564,8 +564,10 @@ class MySQL_wrapper {
 			$nl 	= empty($_SERVER['REMOTE_ADDR']) ? PHP_EOL : "<br>" . PHP_EOL;
 			$web 	= empty($_SERVER['REMOTE_ADDR']) ? FALSE : $web;
 			$error 	= ($web ? "{$nl} - Error No: <a href=\"http://search.oracle.com/search/search?q={$this->errorNo}&amp;group=MySQL\">{$this->errorNo}</a>{$nl} - Error: {$this->error}" : "{$nl} - Error No: {$this->errorNo}{$nl} - Error: {$this->error}") . PHP_EOL;
-			if ($this->logErrors) $this->log('ERROR', "NO -> {$this->errorNo} - DESC -> {$this->error}");
-			echo $msg, $this->link ? $error : NULL;
+			if ($this->logErrors) 
+				$this->log('ERROR', "NO -> {$this->errorNo} - DESC -> {$this->error}");
+			if ($this->displayError) 
+				echo $msg, $this->link ? $error : NULL;
 		}
 	}
 	
