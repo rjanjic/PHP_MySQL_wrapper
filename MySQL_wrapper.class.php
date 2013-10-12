@@ -74,7 +74,7 @@ class MySQL_wrapper {
 	/** Display Errors (Default: TRUE)
 	 * @var boolean
 	 */
-	var $displayError = FALSE;
+	var $displayError = TRUE;
 	
 	/** Link
 	 * @var resurse
@@ -156,7 +156,7 @@ class MySQL_wrapper {
 	
 	/** Sets the default character set for the current connection.
 	 * @param 	string 		$character 	- A valid character set name ( If not defined $this->character whill be used)
-	 * @param 	resource 	$link 		- link identifier
+	 * @param 	resource 	$link 		- Link identifier
 	 * @return	boolean
 	 */
 	function setCharacter($character, $link = 0) {
@@ -175,7 +175,7 @@ class MySQL_wrapper {
 	}
 	
 	/** Close Connection on the server that's associated with the specified link (identifier).
-	 * @param 	resurse 	$link 		- link identifier
+	 * @param 	resurse 	$link 		- Link identifier
 	 */
 	function close($link = 0) {
 		@mysql_close($link ? $link : $this->link) or $this->error("Connection close failed.");
@@ -306,12 +306,12 @@ class MySQL_wrapper {
 	 * @param 	string 		$table 			- Table name
 	 * @param	string		$delimiter		- COLUMNS TERMINATED BY (Default: ',')
 	 * @param	string 		$enclosure		- OPTIONALLY ENCLOSED BY (Default: '"')
-	 * @param 	string		$escape 		- ESCAPED BY (Defaul: '\')
+	 * @param 	string		$escape 		- ESCAPED BY (Default: '\')
 	 * @param 	integer 	$ignore 		- Number of ignored rows (Default: 1)
 	 * @param 	array		$update 		- If row fields needed to be updated eg date format or increment (SQL format only @FIELD is variable with content of that field in CSV row) $update = array('SOME_DATE' => 'STR_TO_DATE(@SOME_DATE, "%d/%m/%Y")', 'SOME_INCREMENT' => '@SOME_INCREMENT + 1')
 	 * @param 	string 		$getColumnsFrom	- Get Columns Names from (file or table) - this is important if there is update while inserting (Default: file)
-	 * @param 	string 		$newLine		- New line detelimiter (Default: \n)
-	 * @param 	resource 	$link 			- link identifier
+	 * @param 	string 		$newLine		- New line delimiter (Default: \n)
+	 * @param 	resource 	$link 			- Link identifier
 	 * @return 	number of inserted rows or false
 	 */
 	function importCSV2Table($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = '\n', $link = 0) {
@@ -356,9 +356,9 @@ class MySQL_wrapper {
 	 * @param	string		$delimiter		- COLUMNS TERMINATED BY (Default: ',')
 	 * @param	string 		$enclosure		- OPTIONALLY ENCLOSED BY (Default: '"')
 	 * @param 	string		$escape 		- ESCAPED BY (Default: '\')
-	 * @param 	string 		$newLine		- New line detelimiter (Default: \n)
+	 * @param 	string 		$newLine		- New line delimiter (Default: \n)
 	 * @param 	boolean		$showColumns 	- Columns names in first line
-	 * @param 	resource 	$link 			- link identifier
+	 * @param 	resource 	$link 			- Link identifier
 	 * @return 	number of inserted rows or false
 	 */
 	function exportTable2CSV($table, $file, $columns = '*', $where = NULL, $limit = 0, $delimiter = ',', $enclosure = '"', $escape = '\\', $newLine = '\n', $showColumns = TRUE, $link = 0){
@@ -377,7 +377,7 @@ class MySQL_wrapper {
 			}
 		}
 		
-		// Prepere SQL for column names
+		// Prepare SQL for column names
 		if ($showColumns) {
 			$tableColumnsArr = array();
 			if ($columns == '*'){
@@ -401,8 +401,74 @@ class MySQL_wrapper {
 		return ($this->query($sql, $this->link)) ? TRUE : FALSE;
 	}
 	
+	/** Rename table(s)
+	 * @param 	array 		$table 	- Names of the tables eg -> array('old_table' => 'new_table') or array('table1' => 'tmp_table', 'table2' => 'table1', 'tmp_table' => 'table1')
+	 * @param 	resource 	$link 	- Link identifier
+	 * @return 	resource or false
+	 */
+	function renameTable($table, $link = 0) {
+		$this->link = $link ? $link : $this->link;
+		$rename = array();
+		foreach ($table as $old => $new) {
+			$rename[] = "`{$old}` TO `{$new}`";
+		}
+		return $this->query("RENAME TABLE " . implode(', ', $rename) . ";", $link); 
+	}
+
+	/** Copy table structure or structure and data.
+	 * @param 	string 		$table 		- Table name
+	 * @param 	string 		$new_table 	- New table name
+	 * @param 	boolean		$data 		- Copy table data
+	 * @param 	resource 	$link 		- Link identifier
+	 * @return 	resource or false
+	 */
+	function copyTable($table, $new_table, $data = TRUE, $link = 0) {
+		$this->link = $link ? $link : $this->link;
+		$r = $this->query("CREATE TABLE `{$new_table}` LIKE `{$table}`;", $link);
+		return ($r && $data) ? $this->query("INSERT INTO `{$new_table}` SELECT * FROM `{$table}`;", $link) : $r;
+	}
+
+	/** Truncate table
+	 * @param 	string 		$table 		- Table name
+	 * @param 	resource 	$link 		- Link identifier
+	 * @return 	resource or false
+	 */
+	function truncateTable($table, $link = 0) {
+		$this->link = $link ? $link : $this->link;
+		return $this->query("TRUNCATE TABLE `" . $table . "`;", $link); 
+	}
+	
+	/** Drop table(s)
+	 * @param 	array 		$table 		- Names of the tables eg -> array('table1', 'table2')
+	 * @param 	boolean		$if_exists	- Use IF EXISTS to prevent an error from occurring for tables that do not exist.
+	 * @param 	resource 	$link 		- Link identifier
+	 * @return 	resource or false
+	 */
+	function dropTable($table, $if_exists = TRUE, $link = 0) {
+		$this->link = $link ? $link : $this->link;
+		return $this->query("DROP TABLE " . ($if_exists ? "IF EXISTS " : NULL) . "`" . (is_array($table) ? implode('`, `', $table) : $table) . "`;", $link); 
+	}
+	
+	/** Data Base size in B / KB / MB / GB / TB
+	 * @param 	string	 	$sizeIn		- Size in B / KB / MB / GB / TB
+	 * @param 	integer	 	$round		- Round on decimals
+	 * @param 	resource 	$link 		- Link identifier
+	 * @return 	- Size in B / KB / MB / GB / TB
+	 */
+	function getDataBaseSize($sizeIn = 'MB', $round = 2, $link = 0) {
+		$this->link = $link ? $link : $this->link;
+		$r = $this->query("SELECT ROUND( SUM( `data_length` + `index_length` ) " . str_repeat('/ 1024 ', array_search(strtoupper($sizeIn), array(0 => 'B', 1 => 'KB', 2 => 'MB', 3 => 'GB', 4 => 'TB'))) . ", {$round} ) `size` FROM `information_schema`.`TABLES` WHERE `table_schema` LIKE '{$this->database}' GROUP BY `table_schema`;", $this->link);
+		if ($r !== FALSE) {
+			$row = $this->fetchArray($r);
+			$this->freeResult($r);
+			return $row['size'];
+		} else {
+			return FALSE;
+		}
+	}
+	
 	/** Retrieves the ID generated for an AUTO_INCREMENT column by the previous query.
-	 * @param 	resource 	$link 	- link identifier
+	 * @param 	resource 	$link 	- Link identifier
 	 * @return 	integer
 	 */
 	function insertId($link = 0) {
@@ -413,7 +479,7 @@ class MySQL_wrapper {
 	/** Retrieves the number of rows from table based on certain conditions.
 	 * @param 	string 		$table 	- Table name
 	 * @param 	string 		$where 	- WHERE Clause
-	 * @param 	resource 	$link 	- link identifier
+	 * @param 	resource 	$link 	- Link identifier
 	 * @return 	integer or false
 	 */
 	function countRows($table, $where = NULL, $link = 0) {
@@ -430,7 +496,7 @@ class MySQL_wrapper {
 	
 	/** Retrieves next auto increment value.
 	 * @param 	string 		$table 	- Table name
-	 * @param 	resource 	$link 	- link identifier
+	 * @param 	resource 	$link 	- Link identifier
 	 * @return 	integer or false
 	 */
 	function nextAutoIncrement($table, $link = 0) {
@@ -449,7 +515,7 @@ class MySQL_wrapper {
 	 * @param 	string 		$table 	- Table name
 	 * @param 	string 		$where 	- WHERE Clause
 	 * @param 	integer 	$limit 	- Limit offset
-	 * @param 	resource 	$link 	- link identifier
+	 * @param 	resource 	$link 	- Link identifier
 	 * @return 	number of deleted rows or false
 	 */
 	function deleteRow($table, $where = NULL, $limit = 0, $link = 0) {
@@ -499,11 +565,7 @@ class MySQL_wrapper {
 		foreach ($columns as $col) {
 			if (is_array($search)) {
 				foreach ($search as $k => $s) {
-					if (is_array($replace)) {
-						$update[] = "`{$col}` = REPLACE(`{$col}`, '{$this->escape($s)}', '{$this->escape($replace[$k])}')";
-					} else {
-						$update[] = "`{$col}` = REPLACE(`{$col}`, '{$this->escape($s)}', '{$this->escape($replace)}')";
-					}
+					$update[] = "`{$col}` = REPLACE(`{$col}`, '{$this->escape($s)}', '{$this->escape(is_array($replace) ? $replace[$k] : $replace)}')";
 				}
 			} else {
 				$update[] = "`{$col}` = REPLACE(`{$col}`, '{$this->escape($search)}', '{$this->escape($replace)}')";
@@ -552,7 +614,7 @@ class MySQL_wrapper {
 	}
 	
 	/** Prints error message
-	 * @param 	string		$mas	- Messange
+	 * @param 	string		$msg	- Message
 	 * @param 	boolean 	$web 	- HTML (TRUE) or Plaint text
 	 */
 	function error($msg, $web = FALSE) {

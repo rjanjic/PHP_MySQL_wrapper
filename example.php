@@ -471,3 +471,51 @@ $db->strReplace('table', '*', 'search', 'replace');
 // function strReplace($table, $columns, $search, $replace, $where = NULL, $limit = 0, $link = 0)
 // Close connection
 $db->close();
+
+// Example 20
+// Basic Table Operation
+///////////////////////////////////////////////////////////////////////////////////////////
+$db = new MySQL_wrapper(HOST, USER, PASS, DB);
+// Connect
+$db->connect();
+
+// Rename table
+$db->renameTable(array('old_table_name' => 'new_table_name'));
+// Swap table names
+$db->renameTable(array('table1' => 'tmp_table', 'table2' => 'table1', 'tmp_table' => 'table1'));
+
+// Copy table (with data included)
+$db->copyTable('table', 'table_copy');
+// Copy table structure
+$db->copyTable('table', 'table_copy2', FALSE);
+
+// Truncate table (empty)
+$db->truncateTable('table_copy2');
+
+// Drop one table
+$db->dropTable('table_copy2');
+// Drop multiple tables
+$db->dropTable(array('table_copy', 'table_copy2'));
+
+// Close connection
+$db->close();
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+// Example 21
+// Get database size
+///////////////////////////////////////////////////////////////////////////////////////////
+$db = new MySQL_wrapper(HOST, USER, PASS, DB);
+
+// Connect
+$db->connect();
+/** Data Base size in B / KB / MB / GB / TB
+ * @param 	string	 	$sizeIn		- Size in B / KB / MB / GB / TB
+ * @param 	integer	 	$round		- Round on decimals
+ * @param 	resource 	$link 		- Link identifier
+ * @return 	- Size in B / KB / MB / GB / TB
+ */
+// function getDataBaseSize($sizeIn = 'MB', $round = 2, $link = 0)
+echo '<hr /><pre>Database size is: ', $db->getDataBaseSize('mb', 2), ' MB</pre>';
+// Close connection
+$db->close();
