@@ -359,7 +359,7 @@ class MySQL_wrapper {
 	 * @param 	string 		$newLine		- New line delimiter (Default: \n)
 	 * @param 	boolean		$showColumns 	- Columns names in first line
 	 * @param 	resource 	$link 			- Link identifier
-	 * @return 	number of inserted rows or false
+	 * @return 	- File path
 	 */
 	function exportTable2CSV($table, $file, $columns = '*', $where = NULL, $limit = 0, $delimiter = ',', $enclosure = '"', $escape = '\\', $newLine = '\n', $showColumns = TRUE, $link = 0){
 		$this->link = $link ? $link : $this->link;
@@ -398,7 +398,49 @@ class MySQL_wrapper {
 			   "ESCAPED BY '{$this->escape($escape)}' " .
 			   "LINES TERMINATED BY '{$newLine}' " .
 			   "FROM `{$table}`" . ($where ? " WHERE {$where}" : NULL) . ($limit ? " LIMIT {$limit}" : NULL) . ";";
-		return ($this->query($sql, $this->link)) ? TRUE : FALSE;
+		return ($this->query($sql, $this->link)) ? $file : FALSE;
+	}
+	
+	/** Export query to CSV file.
+	 * @param 	string 		$sql 			- MySQL Query
+	 * @param 	string		$file			- CSV File path
+	 * @param	string		$delimiter		- COLUMNS TERMINATED BY (Default: ',')
+	 * @param	string 		$enclosure		- OPTIONALLY ENCLOSED BY (Default: '"')
+	 * @param 	string		$escape 		- ESCAPED BY (Default: '\')
+	 * @param 	string 		$newLine		- New line delimiter (Default: \n)
+	 * @param 	boolean		$showColumns 	- Columns names in first line
+	 * @param 	resource 	$link 			- Link identifier
+	 * @return 	- File path
+	 */
+	function query2CSV($sql, $file, $delimiter = ',', $enclosure = '"', $escape = '\\', $newLine = '\n', $showColumns = TRUE, $link = 0) {
+		$this->link = $link ? $link : $this->link;
+		$fh = fopen($file, 'w') or ($this->logErrors) ? $this->log("ERROR", "Can't create CSV file.") : FALSE;
+		fclose($fh);
+		$file = realpath($file);
+		unlink($file);
+		// Remove ; from end of query
+		$sql = rtrim(trim($sql), ';');
+		// Prepare SQL for column names
+		if ($showColumns) {
+			$r = $this->query(preg_replace('/(limit)\s\d(((\,\s)|(\s\,\s)|(\s\,))\d)?$/i', 'LIMIT 1', $sql), $this->link);
+			if ($r !== FALSE && $this->affected > 0) {
+				$columns = $this->fetchArray($r);
+				$this->freeResult($r);
+				$tableColumnsArr = array();
+				foreach ($columns as $k => $v) {
+					$tableColumnsArr[] = "'{$k}' AS `{$k}`";
+				}
+				$columnsSQL = "SELECT " . implode(', ', $tableColumnsArr) . " UNION ALL ";
+			}
+		}
+		// Final query
+		$sql = (($showColumns) ? $columnsSQL : NULL) . "{$sql} " .
+			   "INTO OUTFILE '{$this->escape($file)}' " .
+			   "FIELDS TERMINATED BY '{$delimiter}' " .
+			   "OPTIONALLY ENCLOSED BY '{$enclosure}' " .
+			   "ESCAPED BY '{$this->escape($escape)}' " .
+			   "LINES TERMINATED BY '{$newLine}';";
+		return ($this->query($sql, $this->link)) ? $file : FALSE;
 	}
 	
 	/** Rename table(s)

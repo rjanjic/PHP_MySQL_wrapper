@@ -61,7 +61,6 @@ $db->connect();
 $db->close();
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-
 // Example 2
 // Connection example
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -132,7 +131,6 @@ $db->freeResult();
 $db->close();
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-
 // Example 5
 // Faster select exmaple (fetch query to array)
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -143,7 +141,6 @@ print_r($db->fetchQueryToArray('SELECT * FROM `table`'));
 echo "</pre>";
 $db->close();
 ///////////////////////////////////////////////////////////////////////////////////////////
-
 
 // Exmaple 6
 // Multi results
@@ -180,7 +177,6 @@ $db->freeResult($r2);
 $db->close();
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-
 // Example 7
 // Rows, Cols num
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -198,7 +194,6 @@ $db->freeResult();
 
 $db->close();
 ///////////////////////////////////////////////////////////////////////////////////////////
-
 
 // Example 8
 // Count rows
@@ -223,7 +218,6 @@ echo "<hr /><strong>Example 8 (count rows)</strong><br />Count all: {$count}, Co
 // $db->countRows($table, $where = NULL, $link = 0)
 $db->close();
 ///////////////////////////////////////////////////////////////////////////////////////////
-
 
 // Example 9
 // Array to insert
@@ -257,7 +251,6 @@ echo "<hr /><strong>Example 9 (array to insert)</strong><br />Last insert id is:
 // $db->arrayToInsert($table, $data, $ignore = FALSE, $duplicateupdate = NULL, $link = 0)
 $db->close();
 ///////////////////////////////////////////////////////////////////////////////////////////
-
 
 // Example 10
 // Next AutoIncrement
@@ -340,6 +333,54 @@ $db->close();
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 // Example 14
+// Basic Table Operation
+///////////////////////////////////////////////////////////////////////////////////////////
+$db = new MySQL_wrapper(HOST, USER, PASS, DB);
+// Connect
+$db->connect();
+
+// Rename table
+$db->renameTable(array('old_table_name' => 'new_table_name'));
+// Swap table names
+$db->renameTable(array('table1' => 'tmp_table', 'table2' => 'table1', 'tmp_table' => 'table1'));
+
+// Copy table (with data included)
+$db->copyTable('table', 'table_copy');
+// Copy table structure
+$db->copyTable('table', 'table_copy2', FALSE);
+
+// Truncate table (empty)
+$db->truncateTable('table_copy2');
+
+// Drop one table
+$db->dropTable('table_copy2');
+// Drop multiple tables
+$db->dropTable(array('table_copy', 'table_copy2'));
+
+// Close connection
+$db->close();
+///////////////////////////////////////////////////////////////////////////////////////////
+
+// Example 15
+// Get database size
+///////////////////////////////////////////////////////////////////////////////////////////
+$db = new MySQL_wrapper(HOST, USER, PASS, DB);
+
+// Connect
+$db->connect();
+/** Data Base size in B / KB / MB / GB / TB
+ * @param 	string	 	$sizeIn		- Size in B / KB / MB / GB / TB
+ * @param 	integer	 	$round		- Round on decimals
+ * @param 	resource 	$link 		- Link identifier
+ * @return 	- Size in B / KB / MB / GB / TB
+ */
+// function getDataBaseSize($sizeIn = 'MB', $round = 2, $link = 0)
+echo '<hr /><pre>Database size is: ', $db->getDataBaseSize('mb', 2), ' MB</pre>';
+// Close connection
+$db->close();
+///////////////////////////////////////////////////////////////////////////////////////////
+
+// Example 16
 // Loging queries and errors
 ///////////////////////////////////////////////////////////////////////////////////////////
 $db = new MySQL_wrapper(HOST, USER, PASS, DB);
@@ -358,7 +399,7 @@ $db->query('SELECT * FROM `table` asfd!@#$');
 $db->close();
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-// Example 15
+// Example 17
 // Export Table to CSV
 ///////////////////////////////////////////////////////////////////////////////////////////
 $db = new MySQL_wrapper(HOST, USER, PASS, DB);
@@ -390,7 +431,32 @@ $db->exportTable2CSV('table', 'test-3.txt', array('firstname', 'surname', 'date'
 $db->close();
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-// Example 16
+// Example 18
+// Query to CSV
+///////////////////////////////////////////////////////////////////////////////////////////
+$db = new MySQL_wrapper(HOST, USER, PASS, DB);
+
+// Connect
+$db->connect();
+/** Export query to CSV file.
+ * @param 	string 		$sql 			- MySQL Query
+ * @param 	string		$file			- CSV File path
+ * @param	string		$delimiter		- COLUMNS TERMINATED BY (Default: ',')
+ * @param	string 		$enclosure		- OPTIONALLY ENCLOSED BY (Default: '"')
+ * @param 	string		$escape 		- ESCAPED BY (Default: '\')
+ * @param 	string 		$newLine		- New line delimiter (Default: \n)
+ * @param 	boolean		$showColumns 	- Columns names in first line
+ * @param 	resource 	$link 			- Link identifier
+ * @return 	- File path
+ */
+// function query2CSV($sql, $file, $delimiter = ',', $enclosure = '"', $escape = '\\', $newLine = '\n', $showColumns = TRUE, $link = 0)
+$path = $db->query2CSV('select * from `table` limit 10', 'test-query2csv.csv');
+echo '<hr /><pre>Query exported to CSV file: ', $path, '</pre>';
+// Close connection
+$db->close();
+///////////////////////////////////////////////////////////////////////////////////////////
+
+// Example 19
 // Import CSV to Table
 ///////////////////////////////////////////////////////////////////////////////////////////
 $db = new MySQL_wrapper(HOST, USER, PASS, DB);
@@ -417,7 +483,7 @@ $db->importCSV2Table('test-1.txt', 'table');
 $db->close();
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-// Example 17
+// Example 20
 // Import CSV to Table
 ///////////////////////////////////////////////////////////////////////////////////////////
 $db = new MySQL_wrapper(HOST, USER, PASS, DB);
@@ -439,7 +505,7 @@ $queries[] = '...';
 // Close connection
 $db->close();
 
-// Example 18
+// Example 21
 // String Replace Table Columns
 ///////////////////////////////////////////////////////////////////////////////////////////
 $db = new MySQL_wrapper(HOST, USER, PASS, DB);
@@ -469,53 +535,5 @@ $db->strReplace('table', '*', 'search', 'replace');
  * @return  integer 	- Affected rows
  */
 // function strReplace($table, $columns, $search, $replace, $where = NULL, $limit = 0, $link = 0)
-// Close connection
-$db->close();
-
-// Example 20
-// Basic Table Operation
-///////////////////////////////////////////////////////////////////////////////////////////
-$db = new MySQL_wrapper(HOST, USER, PASS, DB);
-// Connect
-$db->connect();
-
-// Rename table
-$db->renameTable(array('old_table_name' => 'new_table_name'));
-// Swap table names
-$db->renameTable(array('table1' => 'tmp_table', 'table2' => 'table1', 'tmp_table' => 'table1'));
-
-// Copy table (with data included)
-$db->copyTable('table', 'table_copy');
-// Copy table structure
-$db->copyTable('table', 'table_copy2', FALSE);
-
-// Truncate table (empty)
-$db->truncateTable('table_copy2');
-
-// Drop one table
-$db->dropTable('table_copy2');
-// Drop multiple tables
-$db->dropTable(array('table_copy', 'table_copy2'));
-
-// Close connection
-$db->close();
-
-///////////////////////////////////////////////////////////////////////////////////////////
-
-// Example 21
-// Get database size
-///////////////////////////////////////////////////////////////////////////////////////////
-$db = new MySQL_wrapper(HOST, USER, PASS, DB);
-
-// Connect
-$db->connect();
-/** Data Base size in B / KB / MB / GB / TB
- * @param 	string	 	$sizeIn		- Size in B / KB / MB / GB / TB
- * @param 	integer	 	$round		- Round on decimals
- * @param 	resource 	$link 		- Link identifier
- * @return 	- Size in B / KB / MB / GB / TB
- */
-// function getDataBaseSize($sizeIn = 'MB', $round = 2, $link = 0)
-echo '<hr /><pre>Database size is: ', $db->getDataBaseSize('mb', 2), ' MB</pre>';
 // Close connection
 $db->close();
