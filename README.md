@@ -11,8 +11,9 @@ It can:
 - Count the number of rows of a table that match a given condition
 - Get the next value of an auto-incremented table field
 - Delete table rows that match a given condition
-- Export / Import to/from CSV files
-- Do str_replace in given table
+- Export / Import table to/from CSV files
+- Export query to SCV file
+- Do str_replace in given table for defined columns
 - Rename / Copy / Truncate / Drop table
 - Get database size
 - Log queries / errors
