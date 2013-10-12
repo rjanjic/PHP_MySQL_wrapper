@@ -13,4 +13,6 @@ It can:
 - Delete table rows that match a given condition
 - Export / Import to/from CSV files
 - Do str_replace in given table
+- Rename / Copy / Truncate / Drop table
+- Get database size
 - Log queries / errors
