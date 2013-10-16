@@ -419,10 +419,10 @@ class MySQL_wrapper {
 		$file = realpath($file);
 		unlink($file);
 		// Remove ; from end of query
-		$sql = rtrim(trim($sql), ';');
+		$sql = trim(rtrim(trim($sql), ';'));
 		// Prepare SQL for column names
 		if ($showColumns) {
-			$r = $this->query(preg_replace('/(limit)\s\d(((\,\s)|(\s\,\s)|(\s\,))\d)?$/i', 'LIMIT 1', $sql), $this->link);
+			$r = $this->query(preg_replace('/limit(([\s]+[\d]+[\s]*,[\s]*[\d]+)|([\s]+[\d]))$/i', 'LIMIT 1', $sql), $this->link);
 			if ($r !== FALSE && $this->affected > 0) {
 				$columns = $this->fetchArray($r);
 				$this->freeResult($r);
