@@ -439,7 +439,8 @@ class MySQL_wrapper {
 		$sql = trim(rtrim(trim($sql), ';'));
 		// Prepare SQL for column names
 		if ($showColumns) {
-			$r = $this->query(preg_replace('/limit(([\s]+[\d]+[\s]*,[\s]*[\d]+)|([\s]+[\d]))$/i', 'LIMIT 1;', $sql), $this->link);
+			$regex = '/limit(([\s]+([\d]+)[\s]*,[\s]*([\d]+))|([\s]+([\d]+)))$/i';
+			$r = $this->query((preg_match($regex, $sql)) ? preg_replace($regex, 'LIMIT 1;', $sql) : $sql . ' LIMIT 1;', $this->link);
 			if ($r !== FALSE && $this->affected > 0) {
 				$columns = $this->fetchArray($r);
 				$this->freeResult($r);
