@@ -122,7 +122,7 @@ class MySQL_wrapper {
 	 * @param 	string 		$password 	- MySQL Password
 	 * @param 	string 		$database 	- MySQL Database
 	 */
-	function MySQL_wrapper($server = NULL, $username = NULL, $password = NULL, $database = NULL){
+	function MySQL_wrapper($server = NULL, $username = NULL, $password = NULL, $database = NULL) {
 		$this->server = $server;
 		$this->username = $username;
 		$this->password = $password;
@@ -172,6 +172,23 @@ class MySQL_wrapper {
 				return TRUE;
 			}
 		else return FALSE;
+	}
+	
+	/** Checks whether or not the connection to the server is working.
+	 * @param 	resurse 	$link 		- Link identifier
+	 * @return 	boolean 
+	 */
+	function ping($link = 0) {
+		return mysql_ping($link ? $link : $this->link);
+	}
+	
+	/** Reconnect to the server.
+	 * @param 	resurse 	$link 		- Link identifier
+	 * @return 	boolean 
+	 */
+	function reconnect($link = 0) {
+		$this->close($link ? $link : $this->link);
+		return $this->connect();
 	}
 	
 	/** Close Connection on the server that's associated with the specified link (identifier).
@@ -361,7 +378,7 @@ class MySQL_wrapper {
 	 * @param 	resource 	$link 			- Link identifier
 	 * @return 	- File path
 	 */
-	function exportTable2CSV($table, $file, $columns = '*', $where = NULL, $limit = 0, $delimiter = ',', $enclosure = '"', $escape = '\\', $newLine = '\n', $showColumns = TRUE, $link = 0){
+	function exportTable2CSV($table, $file, $columns = '*', $where = NULL, $limit = 0, $delimiter = ',', $enclosure = '"', $escape = '\\', $newLine = '\n', $showColumns = TRUE, $link = 0) {
 		$this->link = $link ? $link : $this->link;
 		$fh = fopen($file, 'w') or ($this->logErrors) ? $this->log("ERROR", "Can't create CSV file.") : FALSE;
 		fclose($fh);
@@ -422,7 +439,7 @@ class MySQL_wrapper {
 		$sql = trim(rtrim(trim($sql), ';'));
 		// Prepare SQL for column names
 		if ($showColumns) {
-			$r = $this->query(preg_replace('/limit(([\s]+[\d]+[\s]*,[\s]*[\d]+)|([\s]+[\d]))$/i', 'LIMIT 1', $sql), $this->link);
+			$r = $this->query(preg_replace('/limit(([\s]+[\d]+[\s]*,[\s]*[\d]+)|([\s]+[\d]))$/i', 'LIMIT 1;', $sql), $this->link);
 			if ($r !== FALSE && $this->affected > 0) {
 				$columns = $this->fetchArray($r);
 				$this->freeResult($r);
@@ -499,7 +516,7 @@ class MySQL_wrapper {
 	 */
 	function getDataBaseSize($sizeIn = 'MB', $round = 2, $link = 0) {
 		$this->link = $link ? $link : $this->link;
-		$r = $this->query("SELECT ROUND( SUM( `data_length` + `index_length` ) " . str_repeat('/ 1024 ', array_search(strtoupper($sizeIn), array(0 => 'B', 1 => 'KB', 2 => 'MB', 3 => 'GB', 4 => 'TB'))) . ", {$round} ) `size` FROM `information_schema`.`TABLES` WHERE `table_schema` LIKE '{$this->database}' GROUP BY `table_schema`;", $this->link);
+		$r = $this->query("SELECT ROUND( SUM( `data_length` + `index_length` ) " . str_repeat('/ 1024 ', array_search(strtoupper($sizeIn), array('B', 'KB', 'MB', 'GB', 'TB'))) . ", {$round} ) `size` FROM `information_schema`.`TABLES` WHERE `table_schema` LIKE '{$this->database}' GROUP BY `table_schema`;", $this->link);
 		if ($r !== FALSE) {
 			$row = $this->fetchArray($r);
 			$this->freeResult($r);
@@ -697,4 +714,3 @@ class MySQL_wrapper {
 		return ((float) $usec + (float) $sec);
     }
 }
-
