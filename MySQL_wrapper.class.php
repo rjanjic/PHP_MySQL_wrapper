@@ -114,7 +114,7 @@ class MySQL_wrapper {
 	/** Reserved words for array to ( insert / update )
 	 * @var array
 	 */
-	var $reserved = array('null', 'now()', 'curtime()', 'localtime()', 'localtime', 'utc_date()', 'utc_time()', 'utc_timestamp()');
+	var $reserved = array('null', 'now()', 'current_timestamp', 'curtime()', 'localtime()', 'localtime', 'utc_date()', 'utc_time()', 'utc_timestamp()');
 	
 	/** Constructor
 	 * @param 	string 		$server		- MySQL Host name 
@@ -267,14 +267,26 @@ class MySQL_wrapper {
 	
 	/** Returns array with fetched associative rows.
 	 * @param 	string 		$sql 		- MySQL Query
+	 * @param 	string 		$fetchFirst	- Fetch only first row
 	 * @param 	resource 	$link 		- Link identifier
 	 * @return 	array
 	 */
-	function fetchQueryToArray($sql, $link = 0) {
-		$this->link = $link ? $link : $this->link;
+	function fetchQueryToArray($sql, $fetchFirst = FALSE, $link = 0) {
+		$this->link = $link ? $link : $this->link; 
+		if ($fetchFirst) {
+			$sql = rtrim(trim($sql), ';');
+			$sql = preg_replace('/limit(([\s]+([\d]+)[\s]*,[\s]*([\d]+))|([\s]+([\d]+)))$/i', 'LIMIT 1;', $sql);
+			if (substr($sql, -strlen('LIMIT 1;')) !== 'LIMIT 1;') {
+				$sql .= ' LIMIT 1;';
+			}
+		}
 		$q = $this->query($sql, $this->link);
 		$array = array();
-		while ($row = $this->fetchArray($q)) $array[] = $row;
+		if ($fetchFirst && $this->affected > 0) {
+			$array = $this->fetchArray($q);
+		} else {
+			while ($row = $this->fetchArray($q)) $array[] = $row;
+		}
 		$this->freeResult($q);
 		return $array;
 	}
@@ -306,7 +318,7 @@ class MySQL_wrapper {
 	
 	/** Creates an sql string from an associate array
 	 * @param 	string 		$table 	- Table name
-	 * @param 	array 		$data 	- Data array Eg. $data['column'] = 'val';
+	 * @param 	array 		$data 	- Data array Eg. array('column' => 'val') or multirows array(array('column' => 'val'), array('column' => 'val2'))
 	 * @param 	boolean		$ingore	- INSERT IGNORE (row won't actually be inserted if it results in a duplicate key)
 	 * @param 	string 		$duplicateupdate 	- ON DUPLICATE KEY UPDATE (The ON DUPLICATE KEY UPDATE clause can contain multiple column assignments, separated by commas.)
 	 * @param 	resource 	$link 	- link identifier
@@ -314,8 +326,24 @@ class MySQL_wrapper {
 	 */
 	function arrayToInsert($table, $data, $ignore = FALSE, $duplicateupdate = NULL, $link = 0) {
 		$this->link = $link ? $link : $this->link;
-		foreach ($data as &$val) $val = (in_array(strtolower($val), $this->reserved)) ? strtoupper($val) : "'" . $this->escape($val) . "'";
-		return (!empty($data)) ? $this->query("INSERT" . ($ignore ? " IGNORE" : NULL) . " INTO `{$table}` ( `" . implode('`, `', array_keys($data)) . "` ) VALUES ( " . implode(', ', array_values($data)) . " )" . ($duplicateupdate ? " ON DUPLICATE KEY UPDATE {$duplicateupdate}" : NULL) . ";") ? $this->insertId($this->link) : FALSE : FALSE;
+		$depth = create_function('$a,$callback', '$m = 1; foreach ($a as $v) if (is_array($v)) { $d = $callback($v,$callback) + 1; if ($d > $m) $m = $d; } return $m;');
+		$multirow = ($depth($data, $depth) == 2);
+		if ($multirow) {
+			$c = implode('`, `', array_keys($data[0]));
+			$dat = array();
+			foreach ($data as &$val) {
+				foreach ($val as &$v) {
+					$v = (in_array(strtolower($v), $this->reserved)) ? strtoupper($v) : "'" . $this->escape($v) . "'";
+				}
+				$dat[] = "( " . implode(', ', $val) . " )";
+			}
+			$v = implode(', ', $dat);
+		} else {
+			$c = implode('`, `', array_keys($data));
+			foreach ($data as &$val) $val = (in_array(strtolower($val), $this->reserved)) ? strtoupper($val) : "'" . $this->escape($val) . "'";
+			$v = "( " . implode(', ', $data) . " )";
+		}
+		return (!empty($data)) ? $this->query("INSERT" . ($ignore ? " IGNORE" : NULL) . " INTO `{$table}` ( `{$c}` ) VALUES {$v}" . ($duplicateupdate ? " ON DUPLICATE KEY UPDATE {$duplicateupdate}" : NULL) . ";") ? ($multirow ? TRUE : $this->insertId($this->link)) : FALSE : FALSE;
 	}
 	
 	/** Imports CSV data to Table with possibility to update rows while import.

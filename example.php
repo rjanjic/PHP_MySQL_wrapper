@@ -17,7 +17,6 @@ define('PASS', '');
 define('DB', 'test');
 
 
-
 // create test table
 $db = new MySQL_wrapper(HOST, USER, PASS, DB);
 $db->connect();
@@ -138,6 +137,9 @@ $db = new MySQL_wrapper(HOST, USER, PASS, DB);
 $db->connect();
 echo "<hr /><strong>Example 5 (fetch query to array)</strong><pre>";
 print_r($db->fetchQueryToArray('SELECT * FROM `table`'));
+
+// Returns only first row
+print_r($db->fetchQueryToArray('SELECT * FROM `table`', TRUE));
 echo "</pre>";
 $db->close();
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -236,8 +238,26 @@ $data['date'] = 'now()';
 
 // $db->arrayToInsert( ... ) returns insert id
 $insert_id = $db->arrayToInsert('table', $data);
-$insert_id = $db->arrayToInsert('table', $data);
 echo "<hr /><strong>Example 9 (array to insert)</strong><br />Last insert id is: {$insert_id}<br />";
+
+// Array data
+// [fealdname] = feald value
+$data = array();
+$data['firstname'] = 'Radovan';
+$data['surname'] = 'Janjic';
+$data['email'] = 'rade@it-radionica.com';
+$data['date'] = 'now()';
+
+// [fealdname] = feald value
+$data2 = array();
+$data2['firstname'] = 'Radovan';
+$data2['surname'] = 'Janjic';
+$data2['email'] = 'rade@it-radionica.com';
+$data2['date'] = 'now()';
+
+// $db->arrayToInsert( ... ) multirow returns TRUE on success
+$db->arrayToInsert('table', array($data, $data2 /*, $data3 .... */ ));
+
 
 // More options
 /** Creates an sql string from an associate array
