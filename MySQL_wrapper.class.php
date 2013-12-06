@@ -408,7 +408,7 @@ class MySQL_wrapper {
 	 */
 	function exportTable2CSV($table, $file, $columns = '*', $where = NULL, $limit = 0, $delimiter = ',', $enclosure = '"', $escape = '\\', $newLine = '\n', $showColumns = TRUE, $link = 0) {
 		$this->link = $link ? $link : $this->link;
-		$fh = fopen($file, 'w') or ($this->logErrors) ? $this->log("ERROR", "Can't create CSV file.") : FALSE;
+		$fh = fopen($file, 'w') or ($this->logErrors) ? $this->log("ERROR", "Can't create CSV file: {$file}") : FALSE;
 		fclose($fh);
 		$file = realpath($file);
 		unlink($file);
@@ -459,7 +459,7 @@ class MySQL_wrapper {
 	 */
 	function query2CSV($sql, $file, $delimiter = ',', $enclosure = '"', $escape = '\\', $newLine = '\n', $showColumns = TRUE, $link = 0) {
 		$this->link = $link ? $link : $this->link;
-		$fh = fopen($file, 'w') or ($this->logErrors) ? $this->log("ERROR", "Can't create CSV file.") : FALSE;
+		$fh = fopen($file, 'w') or ($this->logErrors) ? $this->log("ERROR", "Can't create CSV file: {$file}") : FALSE;
 		fclose($fh);
 		$file = realpath($file);
 		unlink($file);
@@ -476,11 +476,14 @@ class MySQL_wrapper {
 				foreach ($columns as $k => $v) {
 					$tableColumnsArr[] = "'{$k}' AS `{$k}`";
 				}
-				$columnsSQL = "SELECT " . implode(', ', $tableColumnsArr) . " UNION ALL ";
+				$columnsSQL = "SELECT " . implode(', ', $tableColumnsArr);
+			} else {
+				// No results for this query
+				return 0;
 			}
 		}
 		// Final query
-		$sql = (($showColumns) ? $columnsSQL : NULL) . "{$sql} " .
+		$sql = (($showColumns && isset($columnsSQL)) ? "SELECT * FROM ( ( " . $columnsSQL . " ) UNION ALL ( {$sql} ) ) `a` " : "{$sql} ") .
 			   "INTO OUTFILE '{$this->escape($file)}' " .
 			   "FIELDS TERMINATED BY '{$delimiter}' " .
 			   "OPTIONALLY ENCLOSED BY '{$enclosure}' " .

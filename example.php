@@ -472,6 +472,9 @@ $db->connect();
 // function query2CSV($sql, $file, $delimiter = ',', $enclosure = '"', $escape = '\\', $newLine = '\n', $showColumns = TRUE, $link = 0)
 $path = $db->query2CSV('select * from `table` limit 10', 'test-query2csv.csv');
 echo '<hr /><pre>Query exported to CSV file: ', $path, '</pre>';
+
+// example 2
+$path = $db->query2CSV('select * from `table` limit 2,2', 'test-query2csv.csv');
 // Close connection
 $db->close();
 ///////////////////////////////////////////////////////////////////////////////////////////
