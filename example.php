@@ -19,7 +19,7 @@ define('DB', 'test');
 
 // create test table
 $db = new MySQL_wrapper(HOST, USER, PASS, DB);
-$db->connect();
+$db->connect(); 
 
 // test table sql for examples
 $db->query("CREATE TABLE IF NOT EXISTS `table` (

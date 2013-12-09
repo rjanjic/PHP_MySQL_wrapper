@@ -716,9 +716,9 @@ class MySQL_wrapper {
 			}
 			$nl 	= empty($_SERVER['REMOTE_ADDR']) ? PHP_EOL : "<br>" . PHP_EOL;
 			$web 	= empty($_SERVER['REMOTE_ADDR']) ? FALSE : $web;
-			$error 	= ($web ? "{$nl} - Error No: <a href=\"http://search.oracle.com/search/search?q={$this->errorNo}&amp;group=MySQL\">{$this->errorNo}</a>{$nl} - Error: {$this->error}" : "{$nl} - Error No: {$this->errorNo}{$nl} - Error: {$this->error}") . PHP_EOL;
+			$error 	= ($web ? "{$nl} - Error No: <a href=\"http://search.oracle.com/search/search?q={$this->errorNo}&amp;group=MySQL\">{$this->errorNo}</a>{$nl} - Error: {$this->error}" : "{$nl} - Error No: {$this->errorNo}{$nl} - Error: {$this->error}{$nl} - Call: {$this->backtrace()}") . PHP_EOL;
 			if ($this->logErrors) 
-				$this->log('ERROR', "NO -> {$this->errorNo} - DESC -> {$this->error}");
+				$this->log('ERROR', "NO -> {$this->errorNo} - DESC -> {$this->error} - CALL -> {$this->backtrace()}");
 			if ($this->displayError) 
 				echo $msg, $this->link ? $error : NULL;
 		}
@@ -735,6 +735,18 @@ class MySQL_wrapper {
 			fclose($fh);
 		} catch(Exception $e) {
 			$this->error($e->getMessage());
+		}
+	}
+	
+	/** Debug Backtrace
+	 * @param	void
+	 * @return	string 		- Backtrace
+	 */
+	function backtrace() {
+		foreach (debug_backtrace() as $t) {
+			if ($t['file'] != __FILE__) {
+				return "Function {$t['function']} in {$t['file']} on line {$t['line']}";
+			}
 		}
 	}
 	
