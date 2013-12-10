@@ -311,8 +311,17 @@ class MySQL_wrapper {
 	 */
 	function arrayToUpdate($table, $data, $where = NULL, $limit = 0, $link = 0) {
 		$this->link = $link ? $link : $this->link;
+		if (is_array(reset($data))) {
+			$cols = array();
+			foreach (array_keys($data[0]) as $c) {
+				$cols[] = "`{$c}` = VALUES(`{$c}`)";
+			}
+			return $this->arrayToInsert($table, $data, TRUE, implode(', ', $cols));
+		}
 		$fields = array();
-		foreach ($data as $key => $val) $fields[] = (in_array(strtolower($val), $this->reserved)) ? "`$key` = " . strtoupper($val) : "`$key` = '" . $this->escape($val) . "'";
+		foreach ($data as $key => $val) {
+			$fields[] = (in_array(strtolower($val), $this->reserved)) ? "`$key` = " . strtoupper($val) : "`$key` = '" . $this->escape($val) . "'";
+		}
 		return (!empty($fields)) ? $this->query("UPDATE `{$table}` SET " . implode(', ', $fields) . ($where ? " WHERE {$where}" : NULL) . ($limit ? " LIMIT {$limit}" : NULL) . ";", $this->link) ? $this->affected : FALSE : FALSE;
 	}
 	
@@ -326,8 +335,7 @@ class MySQL_wrapper {
 	 */
 	function arrayToInsert($table, $data, $ignore = FALSE, $duplicateupdate = NULL, $link = 0) {
 		$this->link = $link ? $link : $this->link;
-		$depth = create_function('$a,$callback', '$m = 1; foreach ($a as $v) if (is_array($v)) { $d = $callback($v,$callback) + 1; if ($d > $m) $m = $d; } return $m;');
-		$multirow = ($depth($data, $depth) == 2);
+		$multirow = is_array(reset($data));
 		if ($multirow) {
 			$c = implode('`, `', array_keys($data[0]));
 			$dat = array();
@@ -432,17 +440,16 @@ class MySQL_wrapper {
 				foreach ($columns as $c)
 					$tableColumnsArr[] = "'{$c}' AS `{$c}`";
 			}
-			$columnsSQL = "SELECT " . implode(', ', $tableColumnsArr) . " UNION ALL ";
+			$columnsSQL = "SELECT " . implode(', ', $tableColumnsArr);
 		}
-			
-		$sql = (($showColumns) ? $columnsSQL : NULL) .
-			   "SELECT " . (is_array($columns) ? '`' . implode('`, `', $columns) . '`' : $columns) . " " . 
+		
+		$sql = "SELECT " . (is_array($columns) ? '`' . implode('`, `', $columns) . '`' : $columns) . " FROM `{$table}`" . ($where ? " WHERE {$where}" : NULL) . ($limit ? " LIMIT {$limit}" : NULL);
+		$sql = (($showColumns) ? "SELECT * FROM ( ( " . $columnsSQL . " ) UNION ALL ( {$sql} ) ) `a` " : "{$sql} ") .
 			   "INTO OUTFILE '{$this->escape($file)}' " . 
 			   "FIELDS TERMINATED BY '{$delimiter}' " .
 			   "OPTIONALLY ENCLOSED BY '{$enclosure}' " .
 			   "ESCAPED BY '{$this->escape($escape)}' " .
-			   "LINES TERMINATED BY '{$newLine}' " .
-			   "FROM `{$table}`" . ($where ? " WHERE {$where}" : NULL) . ($limit ? " LIMIT {$limit}" : NULL) . ";";
+			   "LINES TERMINATED BY '{$newLine}';";
 		return ($this->query($sql, $this->link)) ? $file : FALSE;
 	}
 	

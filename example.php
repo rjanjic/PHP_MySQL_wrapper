@@ -305,6 +305,27 @@ $db->arrayToUpdate('table', $data, "`id` = {$insert_id}");
 if($db->affected){
 	echo "<hr /><strong>Example 11 (array to update)</strong><br />Updated: {$db->affected} row(s).<br />";
 }
+
+// Array data
+// [fealdname] = feald value
+$data = array();
+$data['id'] = 1; // key
+$data['firstname'] = 'foo';
+$data['surname'] = 'bar';
+$data['email'] = 'rade@it-radionica.com';
+$data['date'] = 'now()';
+
+// [fealdname] = feald value
+$data2 = array();
+$data2['id'] = 2; // key 
+$data2['firstname'] = 'Radovana';
+$data2['surname'] = 'Janjic';
+$data2['email'] = 'rade@it-radionica.com';
+$data2['date'] = 'now()';
+
+// $db->arrayToUpdate( ... ) multirow returns TRUE on success
+$db->arrayToUpdate('table', array($data, $data2 /*, $data3 .... */ ));
+
 // More options
 /** Creates an sql string from an associate array
  * @param 	string 		$table 	- Table name
@@ -431,6 +452,8 @@ $db->exportTable2CSV('table', 'test-1.txt');
 $db->exportTable2CSV('table', 'test-2.txt', 'firstname, surname');
 // Export two or more columns using array
 $db->exportTable2CSV('table', 'test-3.txt', array('firstname', 'surname', 'date'));
+// Export all columns where id < 8 and limit 1, 5
+$db->exportTable2CSV('table', 'test-1.txt', '*', 'id < 8', '1,5');
 // More options
 /** Export table data to CSV file.
  * @param 	string 		$table 			- Table name
