@@ -16,6 +16,34 @@ define('USER', 'root');
 define('PASS', '');
 define('DB', 'test');
 
+//////////////////////////////////////////////////////////////////
+$db = new MySQL_wrapper(HOST, USER, PASS, DB);
+$db->connect(); 
+
+$db->dropTable('csv_to_table_test');
+$db->createTableFromCSV('test_files/countrylist.csv', 'csv_to_table_test', ',', '"', '\\', 1, array(), 'file', '\r\n');
+
+$db->dropTable('csv_to_table_test_no_column_names');
+$db->createTableFromCSV('test_files/countrylist1.csv', 'csv_to_table_test_no_column_names', ',', '"', '\\', 0, array(), 'generate', '\r\n');
+
+/** Create table from CSV file and imports CSV data to Table with possibility to update rows while import.
+ * @param 	string		$file			- CSV File path
+ * @param 	string 		$table 			- Table name
+ * @param	string		$delimiter		- COLUMNS TERMINATED BY (Default: ',')
+ * @param	string 		$enclosure		- OPTIONALLY ENCLOSED BY (Default: '"')
+ * @param 	string		$escape 		- ESCAPED BY (Default: '\')
+ * @param 	integer 	$ignore 		- Number of ignored rows (Default: 1)
+ * @param 	array		$update 		- If row fields needed to be updated eg date format or increment (SQL format only @FIELD is variable with content of that field in CSV row) $update = array('SOME_DATE' => 'STR_TO_DATE(@SOME_DATE, "%d/%m/%Y")', 'SOME_INCREMENT' => '@SOME_INCREMENT + 1')
+ * @param 	string 		$getColumnsFrom	- Get Columns Names from (file or generate) - this is important if there is update while inserting (Default: file)
+ * @param 	string 		$newLine		- New line delimiter (Default: \n)
+ * @param 	resource 	$link 			- Link identifier
+ * @return 	number of inserted rows or false
+ */
+// function createTableFromCSV($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = '\r\n', $link = 0)
+
+$db->close();
+exit;
+///////////////////////////////////////////////////////////////////
 
 // create test table
 $db = new MySQL_wrapper(HOST, USER, PASS, DB);
@@ -447,13 +475,13 @@ $db = new MySQL_wrapper(HOST, USER, PASS, DB);
 // Connect
 $db->connect();
 // Export all data
-$db->exportTable2CSV('table', 'test-1.txt');
+$db->exportTable2CSV('table', 'test_files/test-1.txt');
 // Export two or more columns
-$db->exportTable2CSV('table', 'test-2.txt', 'firstname, surname');
+$db->exportTable2CSV('table', 'test_files/test-2.txt', 'firstname, surname');
 // Export two or more columns using array
-$db->exportTable2CSV('table', 'test-3.txt', array('firstname', 'surname', 'date'));
+$db->exportTable2CSV('table', 'test_files/test-3.txt', array('firstname', 'surname', 'date'));
 // Export all columns where id < 8 and limit 1, 5
-$db->exportTable2CSV('table', 'test-1.txt', '*', 'id < 8', '1,5');
+$db->exportTable2CSV('table', 'test_files/test-1.txt', '*', 'id < 8', '1,5');
 // More options
 /** Export table data to CSV file.
  * @param 	string 		$table 			- Table name
@@ -493,11 +521,11 @@ $db->connect();
  * @return 	- File path
  */
 // function query2CSV($sql, $file, $delimiter = ',', $enclosure = '"', $escape = '\\', $newLine = '\n', $showColumns = TRUE, $link = 0)
-$path = $db->query2CSV('select * from `table` limit 10', 'test-query2csv.csv');
+$path = $db->query2CSV('select * from `table` limit 10', 'test_files/test-query2csv.csv');
 echo '<hr /><pre>Query exported to CSV file: ', $path, '</pre>';
 
 // example 2
-$path = $db->query2CSV('select * from `table` limit 2,2', 'test-query2csv.csv');
+$path = $db->query2CSV('select * from `table` limit 2,2', 'test_files/test-query2csv.csv');
 // Close connection
 $db->close();
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -509,7 +537,7 @@ $db = new MySQL_wrapper(HOST, USER, PASS, DB);
 // Connect
 $db->connect();
 // Import all data
-$db->importCSV2Table('test-1.txt', 'table');
+$db->importCSV2Table('test_files/test-1.txt', 'table');
 // More options
 /** Imports CSV data to Table with possibility to update rows while import.
  * @param 	string		$file			- CSV File path
@@ -530,7 +558,37 @@ $db->close();
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 // Example 20
-// Import CSV to Table
+// Create table from CSV file
+///////////////////////////////////////////////////////////////////////////////////////////
+$db = new MySQL_wrapper(HOST, USER, PASS, DB);
+$db->connect(); 
+
+$db->dropTable('csv_to_table_test');
+$db->createTableFromCSV('test_files/countrylist.csv', 'csv_to_table_test', ',', '"', '\\', 1, array(), 'file', '\r\n');
+
+$db->dropTable('csv_to_table_test_no_column_names');
+$db->createTableFromCSV('test_files/countrylist1.csv', 'csv_to_table_test_no_column_names', ',', '"', '\\', 0, array(), 'generate', '\r\n');
+
+/** Create table from CSV file and imports CSV data to Table with possibility to update rows while import.
+ * @param 	string		$file			- CSV File path
+ * @param 	string 		$table 			- Table name
+ * @param	string		$delimiter		- COLUMNS TERMINATED BY (Default: ',')
+ * @param	string 		$enclosure		- OPTIONALLY ENCLOSED BY (Default: '"')
+ * @param 	string		$escape 		- ESCAPED BY (Default: '\')
+ * @param 	integer 	$ignore 		- Number of ignored rows (Default: 1)
+ * @param 	array		$update 		- If row fields needed to be updated eg date format or increment (SQL format only @FIELD is variable with content of that field in CSV row) $update = array('SOME_DATE' => 'STR_TO_DATE(@SOME_DATE, "%d/%m/%Y")', 'SOME_INCREMENT' => '@SOME_INCREMENT + 1')
+ * @param 	string 		$getColumnsFrom	- Get Columns Names from (file or generate) - this is important if there is update while inserting (Default: file)
+ * @param 	string 		$newLine		- New line delimiter (Default: \n)
+ * @param 	resource 	$link 			- Link identifier
+ * @return 	number of inserted rows or false
+ */
+// function createTableFromCSV($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = '\r\n', $link = 0)
+
+$db->close();
+///////////////////////////////////////////////////////////////////////////////////////////
+
+// Example 21
+// Transactions
 ///////////////////////////////////////////////////////////////////////////////////////////
 $db = new MySQL_wrapper(HOST, USER, PASS, DB);
 // Connect
@@ -551,7 +609,7 @@ $queries[] = '...';
 // Close connection
 $db->close();
 
-// Example 21
+// Example 22
 // String Replace Table Columns
 ///////////////////////////////////////////////////////////////////////////////////////////
 $db = new MySQL_wrapper(HOST, USER, PASS, DB);

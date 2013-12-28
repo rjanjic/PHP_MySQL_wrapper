@@ -116,6 +116,11 @@ class MySQL_wrapper {
 	 */
 	var $reserved = array('null', 'now()', 'current_timestamp', 'curtime()', 'localtime()', 'localtime', 'utc_date()', 'utc_time()', 'utc_timestamp()');
 	
+	/** REGEX
+	 * @var array
+	 */
+	var $REGEX = array('LIMIT' => '/limit[\s]+[\d]+[\s]+,[\s]+[\d]+|[\s]+[\d]+$/i', 'COLUMN' => '/^[a-z0-9_\-\s]+$/i');
+	 
 	/** Constructor
 	 * @param 	string 		$server		- MySQL Host name 
 	 * @param 	string 		$username 	- MySQL User
@@ -275,7 +280,7 @@ class MySQL_wrapper {
 		$this->link = $link ? $link : $this->link; 
 		if ($fetchFirst) {
 			$sql = rtrim(trim($sql), ';');
-			$sql = preg_replace('/limit(([\s]+([\d]+)[\s]*,[\s]*([\d]+))|([\s]+([\d]+)))$/i', 'LIMIT 1;', $sql);
+			$sql = preg_replace($this->REGEX['LIMIT'], 'LIMIT 1;', $sql);
 			if (substr($sql, -strlen('LIMIT 1;')) !== 'LIMIT 1;') {
 				$sql .= ' LIMIT 1;';
 			}
@@ -320,7 +325,7 @@ class MySQL_wrapper {
 		}
 		$fields = array();
 		foreach ($data as $key => $val) {
-			$fields[] = (in_array(strtolower($val), $this->reserved)) ? "`$key` = " . strtoupper($val) : "`$key` = '" . $this->escape($val) . "'";
+			$fields[] = (in_array(strtolower($val), $this->reserved)) ? "`{$key}` = " . strtoupper($val) : "`$key` = '{$this->escape($val)}'";
 		}
 		return (!empty($fields)) ? $this->query("UPDATE `{$table}` SET " . implode(', ', $fields) . ($where ? " WHERE {$where}" : NULL) . ($limit ? " LIMIT {$limit}" : NULL) . ";", $this->link) ? $this->affected : FALSE : FALSE;
 	}
@@ -341,14 +346,14 @@ class MySQL_wrapper {
 			$dat = array();
 			foreach ($data as &$val) {
 				foreach ($val as &$v) {
-					$v = (in_array(strtolower($v), $this->reserved)) ? strtoupper($v) : "'" . $this->escape($v) . "'";
+					$v = (in_array(strtolower($v), $this->reserved)) ? strtoupper($v) : "'{$this->escape($v)}'";
 				}
 				$dat[] = "( " . implode(', ', $val) . " )";
 			}
 			$v = implode(', ', $dat);
 		} else {
 			$c = implode('`, `', array_keys($data));
-			foreach ($data as &$val) $val = (in_array(strtolower($val), $this->reserved)) ? strtoupper($val) : "'" . $this->escape($val) . "'";
+			foreach ($data as &$val) $val = (in_array(strtolower($val), $this->reserved)) ? strtoupper($val) : "'{$this->escape($val)}'";
 			$v = "( " . implode(', ', $data) . " )";
 		}
 		return (!empty($data)) ? $this->query("INSERT" . ($ignore ? " IGNORE" : NULL) . " INTO `{$table}` ( `{$c}` ) VALUES {$v}" . ($duplicateupdate ? " ON DUPLICATE KEY UPDATE {$duplicateupdate}" : NULL) . ";") ? ($multirow ? TRUE : $this->insertId($this->link)) : FALSE : FALSE;
@@ -370,6 +375,11 @@ class MySQL_wrapper {
 	function importCSV2Table($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = '\n', $link = 0) {
 		$this->link = $link ? $link : $this->link;
 		$file = file_exists($file) ? realpath($file) : NULL;
+		$file = realpath($file);
+		if (!file_exists($file)) {
+			$this->error('ERROR', "Import CSV to Table - File: {$file} doesn't exist.");
+			return FALSE;
+		}
 		$sql = "LOAD DATA LOCAL INFILE '{$this->escape($file)}' " . 
 			   "INTO TABLE `{$table}` " .
 			   "COLUMNS TERMINATED BY '{$delimiter}' " .
@@ -386,7 +396,7 @@ class MySQL_wrapper {
 				$line = fgets($f);
 				fclose($f);
 				$columns = explode($delimiter, str_replace($enclosure, NULL, trim($line)));
-				foreach ($columns as $c) preg_match('/^[A-Za-z][A-Za-z0-9_]*$/i', $c) or ($this->logErrors) ? $this->log("ERROR", "Invalid Column Name: {$c} in CSV file: {$file}. Data can not be loaded into table: {$table}.") : FALSE;
+				foreach ($columns as $c) preg_match($this->REGEX['COLUMN'], $c) or $this->error("ERROR", "Invalid Column Name: {$c} in CSV file: {$file}. Data can not be loaded into table: {$table}.");
 			}
 			
 			foreach ($columns as &$c) $c = (in_array($c, array_keys($update))) ? '@' . $c : "`{$c}`";
@@ -416,7 +426,10 @@ class MySQL_wrapper {
 	 */
 	function exportTable2CSV($table, $file, $columns = '*', $where = NULL, $limit = 0, $delimiter = ',', $enclosure = '"', $escape = '\\', $newLine = '\n', $showColumns = TRUE, $link = 0) {
 		$this->link = $link ? $link : $this->link;
-		$fh = fopen($file, 'w') or ($this->logErrors) ? $this->log("ERROR", "Can't create CSV file: {$file}") : FALSE;
+		$fh = fopen($file, 'w') or $this->error("ERROR", "Can't create CSV file: {$file}");
+		if (!$fh) {
+			return FALSE;
+		}
 		fclose($fh);
 		$file = realpath($file);
 		unlink($file);
@@ -466,7 +479,10 @@ class MySQL_wrapper {
 	 */
 	function query2CSV($sql, $file, $delimiter = ',', $enclosure = '"', $escape = '\\', $newLine = '\n', $showColumns = TRUE, $link = 0) {
 		$this->link = $link ? $link : $this->link;
-		$fh = fopen($file, 'w') or ($this->logErrors) ? $this->log("ERROR", "Can't create CSV file: {$file}") : FALSE;
+		$fh = fopen($file, 'w') or $this->error("ERROR", "Can't create CSV file: {$file}");
+		if (!$fh) {
+			return FALSE;
+		}
 		fclose($fh);
 		$file = realpath($file);
 		unlink($file);
@@ -474,8 +490,7 @@ class MySQL_wrapper {
 		$sql = trim(rtrim(trim($sql), ';'));
 		// Prepare SQL for column names
 		if ($showColumns) {
-			$regex = '/limit(([\s]+([\d]+)[\s]*,[\s]*([\d]+))|([\s]+([\d]+)))$/i';
-			$r = $this->query((preg_match($regex, $sql)) ? preg_replace($regex, 'LIMIT 1;', $sql) : $sql . ' LIMIT 1;', $this->link);
+			$r = $this->query((preg_match($this->REGEX['LIMIT'], $sql)) ? preg_replace($this->REGEX['LIMIT'], 'LIMIT 1;', $sql) : $sql . ' LIMIT 1;', $this->link);
 			if ($r !== FALSE && $this->affected > 0) {
 				$columns = $this->fetchArray($r);
 				$this->freeResult($r);
@@ -497,6 +512,59 @@ class MySQL_wrapper {
 			   "ESCAPED BY '{$this->escape($escape)}' " .
 			   "LINES TERMINATED BY '{$newLine}';";
 		return ($this->query($sql, $this->link)) ? $file : FALSE;
+	}
+	
+	
+	/** Create table from CSV file and imports CSV data to Table with possibility to update rows while import.
+	 * @param 	string		$file			- CSV File path
+	 * @param 	string 		$table 			- Table name
+	 * @param	string		$delimiter		- COLUMNS TERMINATED BY (Default: ',')
+	 * @param	string 		$enclosure		- OPTIONALLY ENCLOSED BY (Default: '"')
+	 * @param 	string		$escape 		- ESCAPED BY (Default: '\')
+	 * @param 	integer 	$ignore 		- Number of ignored rows (Default: 1)
+	 * @param 	array		$update 		- If row fields needed to be updated eg date format or increment (SQL format only @FIELD is variable with content of that field in CSV row) $update = array('SOME_DATE' => 'STR_TO_DATE(@SOME_DATE, "%d/%m/%Y")', 'SOME_INCREMENT' => '@SOME_INCREMENT + 1')
+	 * @param 	string 		$getColumnsFrom	- Get Columns Names from (file or generate) - this is important if there is update while inserting (Default: file)
+	 * @param 	string 		$newLine		- New line delimiter (Default: \n)
+	 * @param 	resource 	$link 			- Link identifier
+	 * @return 	number of inserted rows or false
+	 */
+	function createTableFromCSV($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = '\r\n', $link = 0) {
+		$this->link = $link ? $link : $this->link;
+		$file = file_exists($file) ? realpath($file) : NULL;
+		if ($file === NULL) {
+			$this->error('ERROR', "Create Table form CSV - File: {$file} doesn't exist.");
+			return FALSE;
+		} else {
+			$f = fopen($file, 'r');
+			$line = fgets($f);
+			fclose($f);
+			$data = explode($delimiter, str_replace($enclosure, NULL, trim($line)));
+			$columns = array();
+			$i = 0;
+			
+			foreach ($data as $c) {
+				if ($getColumnsFrom == 'generate') {
+					$c = 'column_' . $i++;
+				}
+				if (preg_match($this->REGEX['COLUMN'], $c)) {
+					$columns[] = "`{$c}` BLOB NULL";
+				} else {
+					$this->error('ERROR', "Invalid column name: {$c} in file: {$file}");
+					return FALSE;
+				}
+			}
+			
+			$this->query("CREATE TABLE `{$table}` ( " . implode(', ', $columns) . " ) ENGINE=InnoDB DEFAULT CHARSET={$this->character};", $this->link);
+			if ($this->importCSV2Table($file, $table, $delimiter, $enclosure, $escape, $ignore, $update, ($getColumnsFrom == 'generate') ? 'table' : 'file', $newLine, $link) > 0) {
+				$columns = $this->fetchQueryToArray("SELECT * FROM `{$table}` PROCEDURE ANALYSE ( 10, 30 );", FALSE, $this->link);
+				$change = array();
+				foreach ($columns as $c) {
+					$c['Field_name'] = implode('`.`', explode('.', $c['Field_name']));
+					$change[] = "CHANGE `{$c['Field_name']}` `{$c['Field_name']}` {$c['Optimal_fieldtype']}";
+				}
+				$this->query("ALTER TABLE `{$table}` " . implode(', ', $change) . ";", $this->link);
+			}
+		}
 	}
 	
 	/** Rename table(s)
@@ -548,6 +616,7 @@ class MySQL_wrapper {
 	}
 	
 	/** Data Base size in B / KB / MB / GB / TB
+	 * @param 	string	 	$sizeIn		- Size in B / KB / MB / GB / TB
 	 * @param 	string	 	$sizeIn		- Size in B / KB / MB / GB / TB
 	 * @param 	integer	 	$round		- Round on decimals
 	 * @param 	resource 	$link 		- Link identifier
@@ -648,7 +717,7 @@ class MySQL_wrapper {
 			$columns = array();
 			if ($stringColumns == '*') {
 				$columns = $this->getColumns($table, $this->link);
-			} elseif (preg_match('/^[A-Za-z][A-Za-z0-9_]*$/i', $stringColumns)) {
+			} elseif (preg_match($this->REGEX['COLUMN'], $stringColumns)) {
 				$columns[] = $stringColumns;
 			} else {
 				// Put columns into array if not *
@@ -718,8 +787,8 @@ class MySQL_wrapper {
 	function error($msg, $web = FALSE) {
 		if ($this->displayError || $this->logErrors) {
 			if ($this->link) {
-				$this->error = mysql_error($this->link);
-				$this->errorNo = mysql_errno($this->link);
+				$this->error = @mysql_error($this->link);
+				$this->errorNo = @mysql_errno($this->link);
 			}
 			$nl 	= empty($_SERVER['REMOTE_ADDR']) ? PHP_EOL : "<br>" . PHP_EOL;
 			$web 	= empty($_SERVER['REMOTE_ADDR']) ? FALSE : $web;
