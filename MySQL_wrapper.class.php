@@ -410,6 +410,54 @@ class MySQL_wrapper {
 		return ($this->query($sql, $this->link)) ? $this->affected : FALSE;
 	}
 	
+	/** Imports (ON DUPLICATE KEY UPDATE) CSV data in Table with possibility to update rows while import.
+	 * @param 	string		$file			- CSV File path
+	 * @param 	string 		$table 			- Table name
+	 * @param	string		$delimiter		- COLUMNS TERMINATED BY (Default: ',')
+	 * @param	string 		$enclosure		- OPTIONALLY ENCLOSED BY (Default: '"')
+	 * @param 	string		$escape 		- ESCAPED BY (Default: '\')
+	 * @param 	integer 	$ignore 		- Number of ignored rows (Default: 1)
+	 * @param 	array		$update 		- If row fields needed to be updated eg date format or increment (SQL format only @FIELD is variable with content of that field in CSV row) $update = array('SOME_DATE' => 'STR_TO_DATE(@SOME_DATE, "%d/%m/%Y")', 'SOME_INCREMENT' => '@SOME_INCREMENT + 1')
+	 * @param 	string 		$getColumnsFrom	- Get Columns Names from (file or table) - this is important if there is update while inserting (Default: file)
+	 * @param 	string 		$newLine		- New line delimiter (Default: \n)
+	 * @param 	resource 	$link 			- Link identifier
+	 * @return 	number of inserted rows or false
+	 */
+	function importUpdateCSV2Table($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = '\n', $link = 0) {
+		$this->link = $link ? $link : $this->link;
+		
+		$tmp_name = "tmp_{$table}_" . rand();
+		
+		// Create tmp table
+		$this->query("CREATE TEMPORARY TABLE `{$tmp_name}` LIKE `{$table}`;", $this->link);		
+		// Drop indexes from tmp table
+		$this->query("SHOW INDEX FROM `{$tmp_name}`;", $this->link);
+		if($this->affected){
+			$drop = array();
+			while($row = $this->fetchArray()){
+				$drop[] = "DROP INDEX `{$row['Key_name']}`";
+			}
+			$this->freeResult();
+			$this->query("ALTER TABLE `{$tmp_name}` " . implode(', ', $drop) . ";", $this->link);
+		}
+		
+		// Import to tmp
+		$this->importCSV2Table($file, $tmp_name, $delimiter, $enclosure, $escape, $ignore, $update, $getColumnsFrom, $newLine, $this->link);
+		
+		// Copy data
+		$cols = array();
+		foreach ($this->getColumns($table) as $c) {
+			$cols[] = "`{$c}` = VALUES(`{$c}`)";
+		}
+		$this->query("INSERT INTO `{$table}` SELECT * FROM {$tmp_name} ON DUPLICATE KEY UPDATE " . implode(', ', $cols) . ";", $this->link);
+		$i = $this->affected;
+		
+		// Drop tmp table
+		$this->query("DROP TEMPORARY TABLE `{$tmp_name}`;", $this->link);
+		
+		return ($i) ? $i : FALSE;
+	}
+	
 	/** Export table data to CSV file.
 	 * @param 	string 		$table 			- Table name
 	 * @param 	string		$file			- CSV File path
