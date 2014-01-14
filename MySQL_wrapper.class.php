@@ -2,9 +2,9 @@
 /******************************************************************
  * 
  * Projectname:   PHP MySQL Wrapper Class 
- * Version:       1.4
+ * Version:       1.5
  * Author:        Radovan Janjic <rade@it-radionica.com>
- * Last modified: 20 05 2013
+ * Last modified: 14 01 2014
  * Copyright (C): 2012 IT-radionica.com, All Rights Reserved
  * 
  * GNU General Public License (Version 2, June 1991)
