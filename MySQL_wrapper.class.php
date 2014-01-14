@@ -432,7 +432,7 @@ class MySQL_wrapper {
 		// Remove auto_increment if exists
 		$change = array();
 		$this->query("SHOW COLUMNS FROM `{$tmp_name}` WHERE `Key` NOT LIKE '';");
-		if($this->affected){
+		if ($this->affected > 0) {
 			while ($row = $this->fetchArray()) {
 				$change[$row['Field']] = "CHANGE `{$row['Field']}` `{$row['Field']}` {$row['Type']}";
 			}
@@ -482,7 +482,7 @@ class MySQL_wrapper {
 		// Drop tmp table
 		$this->query("DROP TEMPORARY TABLE `{$tmp_name}`;");
 		
-		return ($i) ? $i : FALSE;
+		return ($i > 0) ? $i / 2 : $i;
 	}
 	
 	/** Export table data to CSV file.
