@@ -221,7 +221,6 @@ class MySQL_wrapper {
 				$p['replace'][] = $this->escape($v);
 			}
 			$sql = str_replace($p['search'], $p['replace'], $sql);
-			echo $sql . PHP_EOL;
 			unset($l, $p);
 		}
 		if($this->logQueries) $start = $this->getMicrotime();
@@ -477,7 +476,7 @@ class MySQL_wrapper {
 			$cols[] = "`{$c}` = VALUES(`{$c}`)";
 		}
 		
-		$this->query("INSERT INTO `{$table}` ( `" . implode('`, `', $columns) . "`) SELECT * FROM `{$tmp_name}` ON DUPLICATE KEY UPDATE " . implode(', ', $cols) . ";");
+		$this->query("INSERT INTO `{$table}` ( `" . implode('`, `', $columns) . "` ) SELECT * FROM `{$tmp_name}` ON DUPLICATE KEY UPDATE " . implode(', ', $cols) . ";");
 		$i = $this->affected;
 		
 		// Drop tmp table
