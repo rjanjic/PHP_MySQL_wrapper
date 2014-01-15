@@ -371,16 +371,21 @@ class MySQL_wrapper {
 	 * @param 	integer 	$ignore 		- Number of ignored rows (Default: 1)
 	 * @param 	array		$update 		- If row fields needed to be updated eg date format or increment (SQL format only @FIELD is variable with content of that field in CSV row) $update = array('SOME_DATE' => 'STR_TO_DATE(@SOME_DATE, "%d/%m/%Y")', 'SOME_INCREMENT' => '@SOME_INCREMENT + 1')
 	 * @param 	string 		$getColumnsFrom	- Get Columns Names from (file or table) - this is important if there is update while inserting (Default: file)
-	 * @param 	string 		$newLine		- New line delimiter (Default: \n)
+	 * @param 	string 		$newLine		- New line delimiter (Default: auto detection use \n, \r\n ...)
 	 * @return 	number of inserted rows or false
 	 */
-	function importCSV2Table($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = '\n') {
+	function importCSV2Table($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = FALSE) {
 		$file = file_exists($file) ? realpath($file) : NULL;
 		$file = realpath($file);
 		if (!file_exists($file)) {
 			$this->error('ERROR', "Import CSV to Table - File: {$file} doesn't exist.");
 			return FALSE;
 		}
+		
+		if ($newLine === FALSE) {
+			$newLine = $this->detectEOL($file);
+		}
+		
 		$sql = "LOAD DATA LOCAL INFILE '{$this->escape($file)}' " . 
 			   "INTO TABLE `{$table}` " .
 			   "COLUMNS TERMINATED BY '{$delimiter}' " .
@@ -420,10 +425,10 @@ class MySQL_wrapper {
 	 * @param 	integer 	$ignore 		- Number of ignored rows (Default: 1)
 	 * @param 	array		$update 		- If row fields needed to be updated eg date format or increment (SQL format only @FIELD is variable with content of that field in CSV row) $update = array('SOME_DATE' => 'STR_TO_DATE(@SOME_DATE, "%d/%m/%Y")', 'SOME_INCREMENT' => '@SOME_INCREMENT + 1')
 	 * @param 	string 		$getColumnsFrom	- Get Columns Names from (file or table) - this is important if there is update while inserting (Default: file)
-	 * @param 	string 		$newLine		- New line delimiter (Default: \n)
+	 * @param 	string 		$newLine		- New line delimiter (Default: auto detection use \n, \r\n ...)
 	 * @return 	number of inserted rows or false
 	 */
-	function importUpdateCSV2Table($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = '\n') {		
+	function importUpdateCSV2Table($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = FALSE) {		
 		$tmp_name = "{$table}_tmp_" . rand();
 		
 		// Create tmp table
@@ -432,7 +437,7 @@ class MySQL_wrapper {
 		// Remove auto_increment if exists
 		$change = array();
 		$this->query("SHOW COLUMNS FROM `{$tmp_name}` WHERE `Key` NOT LIKE '';");
-		if ($this->affected > 0) {
+		if($this->affected > 0){
 			while ($row = $this->fetchArray()) {
 				$change[$row['Field']] = "CHANGE `{$row['Field']}` `{$row['Field']}` {$row['Type']}";
 			}
@@ -595,10 +600,10 @@ class MySQL_wrapper {
 	 * @param 	integer 	$ignore 		- Number of ignored rows (Default: 1)
 	 * @param 	array		$update 		- If row fields needed to be updated eg date format or increment (SQL format only @FIELD is variable with content of that field in CSV row) $update = array('SOME_DATE' => 'STR_TO_DATE(@SOME_DATE, "%d/%m/%Y")', 'SOME_INCREMENT' => '@SOME_INCREMENT + 1')
 	 * @param 	string 		$getColumnsFrom	- Get Columns Names from (file or generate) - this is important if there is update while inserting (Default: file)
-	 * @param 	string 		$newLine		- New line delimiter (Default: \n)
+	 * @param 	string 		$newLine		- New line delimiter (Default: auto detection use \n, \r\n ...)
 	 * @return 	number of inserted rows or false
 	 */
-	function createTableFromCSV($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = '\r\n') {
+	function createTableFromCSV($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = FALSE) {
 		$file = file_exists($file) ? realpath($file) : NULL;
 		if ($file === NULL) {
 			$this->error('ERROR', "Create Table form CSV - File: {$file} doesn't exist.");
@@ -878,4 +883,20 @@ class MySQL_wrapper {
 		list($usec, $sec) = explode(" ", microtime());
 		return ((float) $usec + (float) $sec);
     }
+	
+	/** Detect EOL from file
+	 * @param	string		- File path
+	 * @retrun	- EOL chr
+	 */
+	function detectEOL($file) {
+		$f = fopen($file, 'r');
+		$line = fgets($f);
+		fclose($f);
+		foreach (array("\r\n", "\r", "\n") as $eol) {
+			if (substr_compare($line, $eol, -strlen($eol)) === 0) {
+				return $eol;
+			}
+		}
+		return FALSE;
+	}
 }

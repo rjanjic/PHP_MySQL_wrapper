@@ -55,6 +55,7 @@ $db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect
 $db->connect();
+// Import and update all data
 // Close connection
 $db->close();
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -563,7 +564,7 @@ $db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 $db->connect(); 
 
 $db->dropTable('csv_to_table_test');
-$db->createTableFromCSV('test_files/countrylist.csv', 'csv_to_table_test', ',', '"', '\\', 1, array(), 'file', '\r\n');
+$db->createTableFromCSV('test_files/countrylist.csv', 'csv_to_table_test');
 
 $db->dropTable('csv_to_table_test_no_column_names');
 $db->createTableFromCSV('test_files/countrylist1.csv', 'csv_to_table_test_no_column_names', ',', '"', '\\', 0, array(), 'generate', '\r\n');
@@ -591,6 +592,10 @@ $db->close();
 $db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 // Connect
 $db->connect();
+
+// Import and update all data
+$db->importUpdateCSV2Table('test_files/countrylist.csv', 'csv_to_table_test');
+
 // Import and update all data
 $db->importUpdateCSV2Table('test_files/countrylist.csv', 'csv_to_table_test', ',', '"', '\\', 1, array(), 'file', '\r\n');
 // More options

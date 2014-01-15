@@ -17,3 +17,7 @@
 2014-01-14 11:12:48 - ERROR -> NO -> 1064 - DESC -> You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '!@#$' at line 1 - CALL -> Function query in C:\xampp\htdocs\Git\PHP_MySQL_wrapper\example.php on line 441
 2014-01-14 17:14:14 - QUERY -> EXEC -> 0.00538516 -> SHOW COLUMNS FROM `table`;
 2014-01-14 17:14:14 - ERROR -> NO -> 1064 - DESC -> You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '!@#$' at line 1 - CALL -> Function query in C:\xampp\htdocs\Git\PHP_MySQL_wrapper\example.php on line 469
+2014-01-15 11:10:45 - QUERY -> EXEC -> 0.00558519 -> SHOW COLUMNS FROM `table`;
+2014-01-15 11:10:45 - ERROR -> NO -> 1064 - DESC -> You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '!@#$' at line 1 - CALL -> Function query in C:\xampp\htdocs\Git\PHP_MySQL_wrapper\example.php on line 469
+2014-01-15 11:13:38 - QUERY -> EXEC -> 0.00299191 -> SHOW COLUMNS FROM `table`;
+2014-01-15 11:13:38 - ERROR -> NO -> 1064 - DESC -> You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '!@#$' at line 1 - CALL -> Function query in C:\xampp\htdocs\Git\PHP_MySQL_wrapper\example.php on line 469
