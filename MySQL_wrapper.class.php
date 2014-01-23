@@ -619,7 +619,6 @@ class MySQL_wrapper {
 		return ($this->query($sql)) ? $file : FALSE;
 	}
 	
-	
 	/** Create table from CSV file and imports CSV data to Table with possibility to update rows while import.
 	 * @param 	string		$file			- CSV File path
 	 * @param 	string 		$table 			- Table name
@@ -821,9 +820,7 @@ class MySQL_wrapper {
 			$affected = 0;
 			if ($this->affected > 0) {
 				while ($row = $this->fetchArray($q)) {
-					if ($row['columns'] != '') {
-						$affected += $this->strReplace($row['table'], $row['columns'], $search, $replace, $where, $limit);
-					}
+					$affected += $this->strReplace($row['table'], $row['columns'], $search, $replace, $where, $limit);
 				}
 			}
 			$this->freeResult($q);
