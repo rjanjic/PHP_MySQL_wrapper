@@ -19,7 +19,7 @@ define('MySQL_DB', 'test');
 // create test table
 $db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 $db->connect(); 
-
+/*
 // test table sql for examples
 $db->query("CREATE TABLE IF NOT EXISTS `table` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -44,7 +44,7 @@ $db->query("INSERT INTO `table` (`id`, `firstname`, `surname`, `email`, `date`) 
 (8, 'Radovan', 'Janjic', 'rade@it-radionica.com', '2012-11-04'),
 (9, 'Radovan', 'Janjic', 'rade@it-radionica.com', '2012-11-04'),
 (10, 'Radovan', 'Janjic', 'rade@it-radionica.com', '2012-11-04');");
-
+*/
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -54,8 +54,7 @@ $db->query("INSERT INTO `table` (`id`, `firstname`, `surname`, `email`, `date`) 
 $db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect
-$db->connect();
-// Import and update all data
+$db->connect(); 
 // Close connection
 $db->close();
 ///////////////////////////////////////////////////////////////////////////////////////////

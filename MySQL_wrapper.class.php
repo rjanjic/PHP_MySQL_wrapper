@@ -34,7 +34,7 @@ class MySQL_wrapper {
 	/** Class Version 
 	 * @var float 
 	 */
-	var $version = '1.4';
+	var $version = '1.5';
 	
 	/** MySQL Host name  
 	 * @var string
@@ -115,6 +115,11 @@ class MySQL_wrapper {
 	 * @var array
 	 */
 	var $reserved = array('null', 'now()', 'current_timestamp', 'curtime()', 'localtime()', 'localtime', 'utc_date()', 'utc_time()', 'utc_timestamp()');
+	
+	/** Start of MySQL statement for array to ( insert / update )
+	 * @var string
+	 */
+	var $statementStart = 'sql::';
 	
 	/** REGEX
 	 * @var array
@@ -218,7 +223,11 @@ class MySQL_wrapper {
 			}
 			foreach ($l as $k => $v) {
 				$p['search'][] = "@{$k}";
-				$p['replace'][] = $this->escape($v);
+				if (preg_match('/^' . preg_quote($this->statementStart) . '/i', $v)) {
+					$p['replace'][] = preg_replace('/^' . preg_quote($this->statementStart) . '/i', NULL, $v);
+				} else {
+					$p['replace'][] = "'{$this->escape($v)}'";
+				}
 			}
 			$sql = str_replace($p['search'], $p['replace'], $sql);
 			unset($l, $p);
@@ -330,7 +339,13 @@ class MySQL_wrapper {
 		}
 		$fields = array();
 		foreach ($data as $key => $val) {
-			$fields[] = (in_array(strtolower($val), $this->reserved)) ? "`{$key}` = " . strtoupper($val) : "`$key` = '{$this->escape($val)}'";
+			if (in_array(strtolower($val), $this->reserved)) {
+				$fields[] = "`{$key}` = " . strtoupper($val);
+			} elseif (preg_match('/^' . preg_quote($this->statementStart) . '/i', $val)) {
+				$fields[] = "`{$key}` = " . preg_replace('/^' . preg_quote($this->statementStart) . '/i', NULL, $val);
+			} else {
+				$fields[] = "`{$key}` = '{$this->escape($val)}'";
+			}
 		}
 		return (!empty($fields)) ? $this->query("UPDATE `{$table}` SET " . implode(', ', $fields) . ($where ? " WHERE {$where}" : NULL) . ($limit ? " LIMIT {$limit}" : NULL) . ";") ? $this->affected : FALSE : FALSE;
 	}
@@ -349,14 +364,28 @@ class MySQL_wrapper {
 			$dat = array();
 			foreach ($data as &$val) {
 				foreach ($val as &$v) {
-					$v = (in_array(strtolower($v), $this->reserved)) ? strtoupper($v) : "'{$this->escape($v)}'";
+					if (in_array(strtolower($v), $this->reserved)) {
+						$v = strtoupper($v);
+					} elseif (preg_match('/^' . preg_quote($this->statementStart) . '/i', $v)) {
+						$v = preg_replace('/^' . preg_quote($this->statementStart) . '/i', NULL, $v);
+					} else {
+						$v = "'{$this->escape($v)}'";
+					}
 				}
 				$dat[] = "( " . implode(', ', $val) . " )";
 			}
 			$v = implode(', ', $dat);
 		} else {
 			$c = implode('`, `', array_keys($data));
-			foreach ($data as &$val) $val = (in_array(strtolower($val), $this->reserved)) ? strtoupper($val) : "'{$this->escape($val)}'";
+			foreach ($data as &$val) {
+				if (in_array(strtolower($val), $this->reserved)) {
+					$val = strtoupper($val);
+				} elseif (preg_match('/^' . preg_quote($this->statementStart) . '/i', $val)) {
+					$val = preg_replace('/^' . preg_quote($this->statementStart) . '/i', NULL, $val);
+				} else {
+					$val = "'{$this->escape($val)}'";
+				}
+			}
 			$v = "( " . implode(', ', $data) . " )";
 		}
 		return (!empty($data)) ? $this->query("INSERT" . ($ignore ? " IGNORE" : NULL) . " INTO `{$table}` ( `{$c}` ) VALUES {$v}" . ($duplicateupdate ? " ON DUPLICATE KEY UPDATE {$duplicateupdate}" : NULL) . ";") ? ($multirow ? TRUE : $this->insertId()) : FALSE : FALSE;
@@ -487,7 +516,7 @@ class MySQL_wrapper {
 		// Drop tmp table
 		$this->query("DROP TEMPORARY TABLE `{$tmp_name}`;");
 		
-		return ($i > 0) ? $i / 2 : $i;
+		return $i;
 	}
 	
 	/** Export table data to CSV file.
@@ -756,7 +785,7 @@ class MySQL_wrapper {
 	}
 	
 	/** Replace all occurrences of the search string with the replacement string in MySQL Table Column(s).
-	 * @param 	string		$table 	 - Table name
+	 * @param 	string		$table 	 - Table name or "*" to replace in whole db
 	 * @param 	mixed 		$columns - Search & Replace affected Table columns. An array may be used to designate multiple replacements.
 	 * @param 	mixed 		$search  - The value being searched for, otherwise known as the needle. An array may be used to designate multiple needles.
 	 * @param 	mixed 		$replace - The replacement value that replaces found search values. An array may be used to designate multiple replacements.
@@ -765,6 +794,42 @@ class MySQL_wrapper {
 	 * @return  integer 	- Affected rows
 	 */
 	function strReplace($table, $columns, $search, $replace, $where = NULL, $limit = 0) {
+		// Replace in whole DB
+		if ($table == '*') {
+			if (!is_array($columns)){
+				$stringColumns = $columns;
+				if ($stringColumns != '*') {
+					// Put columns into array
+					$columns = array();
+					if (preg_match($this->REGEX['COLUMN'], $stringColumns)) {
+						$columns[] = $stringColumns;
+					} else {
+						foreach (explode(',', $stringColumns) as $c) {
+							$columns[] = trim(str_replace(array("'", "`", "\""), NULL, $c));
+						}
+					}
+					if (empty($columns)) {
+						return FALSE;
+					}
+				}
+			}
+			$q = $this->query(
+				"SELECT DISTINCT `table_name` AS `table`, GROUP_CONCAT(DISTINCT `column_name` ORDER BY `column_name`) AS `columns` FROM `information_schema`.`columns` " .
+				"WHERE (`data_type` LIKE '%char%' OR `data_type` LIKE '%text' OR `data_type` LIKE '%binary')" . (($stringColumns != '*') ? " AND `column_name` IN('" . implode("', '", $columns) . "')" : NULL) . " AND `table_schema` = '{$this->database}' " .
+				"GROUP BY `table_name` ORDER BY `table_name`;"
+			);
+			$affected = 0;
+			if ($this->affected > 0) {
+				while ($row = $this->fetchArray($q)) {
+					if ($row['columns'] != '') {
+						$affected += $this->strReplace($row['table'], $row['columns'], $search, $replace, $where, $limit);
+					}
+				}
+			}
+			$this->freeResult($q);
+			return $affected;
+		}
+		
 		// Columns
 		if (!is_array($columns)){
 			$stringColumns = $columns;
@@ -781,6 +846,7 @@ class MySQL_wrapper {
 				}
 			}
 		}
+		
 		// Update
 		$update = array();
 		foreach ($columns as $col) {
