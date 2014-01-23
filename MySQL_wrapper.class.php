@@ -945,7 +945,7 @@ class MySQL_wrapper {
 	function getMicrotime() {
 		list($usec, $sec) = explode(" ", microtime());
 		return ((float) $usec + (float) $sec);
-    }
+	}
 	
 	/** Detect EOL from file
 	 * @param	string		- File path
