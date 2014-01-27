@@ -101,6 +101,26 @@ class MySQL_wrapper {
 	 */
 	var $logErrors = FALSE;
 	
+	/** Stop script execution on error (Default: FALSE)
+	 * @var boolean
+	 */
+	var $dieOnError = FALSE;
+	
+	/** E-mail errors (Default: FALSE)
+	 * @var boolean
+	 */
+	var $emailErrors = FALSE;
+	
+	/** E-mail errors to (array with emails)
+	 * @var array
+	 */
+	var $emailErrorsTo = array();
+	
+	/** E-mail errors subject
+	 * @var string
+	 */
+	var $emailErrorsSubject = 'MySQL ERROR ON SERVER: %s';
+	
 	/** Log Date Format (Default: Y-m-d H:i:s)
 	 * @var string
 	 */
@@ -898,7 +918,7 @@ class MySQL_wrapper {
 	 * @param 	boolean 	$web 	- HTML (TRUE) or Plaint text
 	 */
 	function error($msg, $web = FALSE) {
-		if ($this->displayError || $this->logErrors) {
+		if ($this->displayError || $this->logErrors || $this->emailErrors) {
 			if ($this->link) {
 				$this->error = @mysql_error($this->link);
 				$this->errorNo = @mysql_errno($this->link);
@@ -910,7 +930,30 @@ class MySQL_wrapper {
 				$this->log('ERROR', "NO -> {$this->errorNo} - DESC -> {$this->error} - CALL -> {$this->backtrace()}");
 			if ($this->displayError) 
 				echo $msg, $this->link ? $error : NULL;
+			if ($this->emailErrors) {
+				$headers = array();
+				$headers[] = "MIME-Version: 1.0";
+				$headers[] = "Content-type: text/plain; charset=UTF-8";
+				$headers[] = "From: MySQL ERROR REPORTING <no-reply@{$_SERVER['SERVER_ADDR']}>";
+				$headers[] = "Reply-To: Recipient Name <no-reply@{$_SERVER['SERVER_ADDR']}>";
+				$headers[] = "Subject: {$this->emailErrorsSubject}";
+				$headers[] = "X-Mailer: PHP/" . phpversion();
+				$m = array();
+				$m['ENV']      = $_SERVER['SERVER_NAME'];
+				$m['TIME']     = date($this->dateFormat);
+				$m['SCRIPT']   = $_SERVER['PHP_SELF'];
+				$m['CALL']     = $this->backtrace();
+				$m['ERROR NO'] = $this->errorNo;
+				$m['ERROR']    = $this->error;
+				$m['MESSAGE']  = $msg;
+				$message = array();
+				foreach ($m as $k => $v) {
+					$message[] = sprintf("%-10s%s", $k, $v);
+				}
+				mail(implode(', ', $this->emailErrorsTo), sprintf($this->emailErrorsSubject, $_SERVER['SERVER_NAME']), implode("\r\n", $message), implode("\r\n", $headers));
+			}
 		}
+		!$this->dieOnError || die();
 	}
 	
 	/** Logs queries or / and errors to file

@@ -635,6 +635,7 @@ $queries[] = '...';
 // $db->transaction($qarr = array())
 // Close connection
 $db->close();
+///////////////////////////////////////////////////////////////////////////////////////////
 
 // Example 23
 // String Search and Replace in all or defined Table Columns
@@ -665,5 +666,22 @@ $db->strReplace('table', '*', 'search', 'replace');
  * @return  integer 	- Affected rows
  */
 // function strReplace($table, $columns, $search, $replace, $where = NULL, $limit = 0)
+// Close connection
+$db->close();
+///////////////////////////////////////////////////////////////////////////////////////////
+
+// Example 24
+// E-mail on error / die on error
+///////////////////////////////////////////////////////////////////////////////////////////
+$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect
+$db->connect(); 
+$db->emailErrors = TRUE;
+$db->dieOnError = TRUE;
+$db->emailErrorsTo = array('rade@it-radionica.com');
+
+$db->query("select * from asdf");
+$db->query("select * from asdf2"); // this one will not be executed because dieOnError = TRUE
 // Close connection
 $db->close();
