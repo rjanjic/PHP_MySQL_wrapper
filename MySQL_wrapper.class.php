@@ -124,7 +124,7 @@ class MySQL_wrapper {
 	/** Log Date Format (Default: Y-m-d H:i:s)
 	 * @var string
 	 */
-	var $dateFormat	= 'Y-m-d H:i:s';
+	var $dateFormat = 'Y-m-d H:i:s';
 	
 	/** Log File Path (Default: log-mysql.txt)
 	 * @var string
