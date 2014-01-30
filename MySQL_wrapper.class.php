@@ -286,7 +286,7 @@ class MySQL_wrapper {
 				if (preg_match('/^' . preg_quote($this->statementStart) . '/i', $v)) {
 					$p['replace'][] = preg_replace('/^' . preg_quote($this->statementStart) . '/i', NULL, $v);
 				} else {
-					$p['replace'][] = "{$this->escape($v)}";
+					$p['replace'][] = $this->escape($v);
 				}
 			}
 			$sql = str_replace($p['search'], $p['replace'], $sql);
