@@ -56,10 +56,15 @@ class MySQL_wrapper {
 	 */
 	var $database = NULL;
 	
-	/** Connection Character Set (Default: UTF-8)
+	/** mysql / mysqli
 	 * @var string
 	 */
-	var $character = 'utf8';
+	var $extension = 'mysqli';
+	 
+	/** Connection Charset (Default: UTF-8)
+	 * @var string
+	 */
+	var $charset = 'utf8';
 	
 	/** Error Description 
 	 * @var string
@@ -124,7 +129,7 @@ class MySQL_wrapper {
 	/** Log Date Format (Default: Y-m-d H:i:s)
 	 * @var string
 	 */
-	var $dateFormat = 'Y-m-d H:i:s';
+	var $dateFormat	= 'Y-m-d H:i:s';
 	
 	/** Log File Path (Default: log-mysql.txt)
 	 * @var string
@@ -159,6 +164,37 @@ class MySQL_wrapper {
 		$this->database = $database;
 	}
 	
+	/** Call function
+	 * @param 	string 		$func		- function name
+	 * @param 	string 		$params 	- MySQL User
+	 * @param 	return
+	 */
+	function call($func) {
+		// Functions without link parameter
+		$l = array('free_result', 'fetch_assoc', 'num_rows', 'num_fields');
+		// Add return value
+		$r = array('free_result' => TRUE);
+		// Params
+		if (func_num_args() >= 2) {
+			$params = func_get_args();
+			unset($params[0]);
+			if ($this->extension == 'mysql') {
+				$params = in_array($func, $l) ? $params : array_merge($params, array($this->link));
+			} elseif ($this->extension == 'mysqli') {
+				$params = in_array($func, $l) ? $params : array_merge(array($this->link), $params);
+			}
+		} else {
+			$params = array($this->link);
+		}
+		// Return
+		if (in_array($func, array_keys($r)) && $this->extension == 'mysqli') {
+			call_user_func_array("{$this->extension}_{$func}", $params);
+			return $r[$func];
+		} else {
+			return call_user_func_array("{$this->extension}_{$func}", $params);
+		}
+	}
+	
 	/** Connect 
 	 * @param 	string 		$server		- MySQL Host name 
 	 * @param 	string 		$username 	- MySQL User
@@ -174,32 +210,36 @@ class MySQL_wrapper {
 			$this->password = $password;
 			$this->database = $database;
 		}
-		$this->link = @mysql_connect($this->server, $this->username, $this->password, $newLink) or $this->error("Couldn't connect to server: {$this->server}.");
-		if ($this->link) {
-			$this->setCharacter($this->character);	
-			@mysql_select_db($this->database, $this->link) or $this->error("Could not open database: {$this->database}.");
-			return TRUE;
-		} else {
-			return FALSE;	
+		
+		if ($this->extension == 'mysql') {
+			$this->link = @mysql_connect($this->server, $this->username, $this->password, $newLink) or $this->error("Couldn't connect to server: {$this->server}.");
+			if ($this->link) {
+				$this->setCharset();
+				@mysql_select_db($this->database, $this->link) or $this->error("Could not open database: {$this->database}.");
+				return TRUE;
+			} else {
+				return FALSE;	
+			}
+		} elseif ($this->extension == 'mysqli') {
+			$this->link = mysqli_connect($this->server, $this->username, $this->password, $this->database);
+			// Check connection
+			if (mysqli_connect_errno($this->link)) {
+				$this->error("Failed to connect to MySQL: " . mysqli_connect_error());
+				return FALSE;
+			} else {
+				$this->setCharset();
+				return TRUE;
+			}
 		}
 	}
 	
-	/** Sets the default character set for the current connection.
-	 * @param 	string 		$character 	- A valid character set name ( If not defined $this->character whill be used)
+	/** Sets the default charset for the current connection.
+	 * @param 	string 		$charset 	- A valid charset name ( If not defined $this->charset whill be used)
 	 * @return	boolean
 	 */
-	function setCharacter($character) {
-		$this->character = $character ? $character : $this->character;
-		if ($this->link && $this->character)
-			if (function_exists('mysql_set_charset')) {
-				return mysql_set_charset($this->character);
-			} else {
-				$this->query("SET NAMES '{$this->character}';");
-				$this->query("SET CHARACTER SET '{$this->character}';");
-				$this->query("SET character_set_results = '{$this->character}', character_set_client = '{$this->character}', character_set_connection = '{$this->character}', character_set_database = '{$this->character}', character_set_server = '{$this->character}';");
-				return TRUE;
-			}
-		else return FALSE;
+	function setCharset($charset = NULL) {
+		$this->charset = $charset ? $charset : $this->charset;
+		$this->call('set_charset', $this->charset) or $this->error("Error loading character set {$this->charset}");
 	}
 	
 	/** Checks whether or not the connection to the server is working.
@@ -207,7 +247,7 @@ class MySQL_wrapper {
 	 * @return 	boolean 
 	 */
 	function ping() {
-		return mysql_ping($this->link);
+		return $this->call('ping');
 	}
 	
 	/** Reconnect to the server.
@@ -223,7 +263,7 @@ class MySQL_wrapper {
 	 * @param 	void
 	 */
 	function close() {
-		@mysql_close($this->link) or $this->error("Connection close failed.");
+		$this->call('close') or $this->error("Connection close failed.");
 	}
 	
 	/** Execute a unique query (multiple queries are not supported) to the currently active database on the server that's associated with the specified link (identifier).
@@ -246,15 +286,15 @@ class MySQL_wrapper {
 				if (preg_match('/^' . preg_quote($this->statementStart) . '/i', $v)) {
 					$p['replace'][] = preg_replace('/^' . preg_quote($this->statementStart) . '/i', NULL, $v);
 				} else {
-					$p['replace'][] = "'{$this->escape($v)}'";
+					$p['replace'][] = "{$this->escape($v)}";
 				}
 			}
 			$sql = str_replace($p['search'], $p['replace'], $sql);
 			unset($l, $p);
 		}
 		if($this->logQueries) $start = $this->getMicrotime();
-		$this->query = @mysql_query($sql, $this->link) or $this->error("Query fail: {$sql}");
-		$this->affected = @mysql_affected_rows($this->link);
+		$this->query = $this->call('query', $sql) or $this->error("Connection close failed.");
+		$this->affected = $this->call('affected_rows');
 		if ($this->query && $this->logQueries) $this->log('QUERY', "EXEC -> " . number_format($this->getMicrotime() - $start, 8) . " -> " . $sql);
 		return $this->query ? $this->query : FALSE;
 	}
@@ -264,7 +304,7 @@ class MySQL_wrapper {
 	 * @return 	integer 	- Retrieves the number of fields from a query
 	 */
 	function numFields($query = 0) {
-		return intval(@mysql_num_fields($query ? $query : $this->query));
+		return intval($this->call('num_fields', $query ? $query : $this->query));
 	}
 	
 	/** Get number of rows in result
@@ -272,7 +312,7 @@ class MySQL_wrapper {
 	 * @return 	integer 	- Retrieves the number of rows from a result set
 	 */
 	function numRows($query = 0) {
-		return intval(mysql_num_rows($query ? $query : $this->query));
+		return intval($this->call('num_rows', $query ? $query : $this->query));
 	}
 	
 	/** Get number of rows in result
@@ -280,8 +320,7 @@ class MySQL_wrapper {
 	 * @return 	bool
 	 */
 	function freeResult($query = 0) {
-		$this->query = $query ? $query : $this->query;
-		@mysql_free_result($this->query) or $this->error("Result ID: {$this->query} could not be freed.");
+		$this->call('free_result', $query ? $query : $this->query) or $this->error("Result could not be freed.");
 	}
 	
 	/** Get Columns names into array
@@ -303,7 +342,7 @@ class MySQL_wrapper {
 	function fetchArray($query = 0) {
 		$this->query = $query ? $query : $this->query;
 		if ($this->query) {
-			return @mysql_fetch_assoc($this->query);
+			return $this->call('fetch_assoc', $this->query);
 		} else {
 			$this->error("Invalid Query ID: {$this->query}. Records could not be fetched.");
 			return FALSE;
@@ -339,7 +378,10 @@ class MySQL_wrapper {
 	 * @return 	string
 	 */
 	function escape($string) {
-		return (version_compare(PHP_VERSION, '5.4.0') >= 0) ? @mysql_real_escape_string($string, $this->link) : @mysql_real_escape_string(get_magic_quotes_gpc() ? stripslashes($string) : $string, $this->link);
+		if (!version_compare(PHP_VERSION, '5.4.0') >= 0) {
+			$string = get_magic_quotes_gpc() ? stripslashes($string) : $string;
+		}
+		return $this->call('real_escape_string', $string);
 	}
 	
 	/** Creates an sql string from an associate array
@@ -408,7 +450,7 @@ class MySQL_wrapper {
 			}
 			$v = "( " . implode(', ', $data) . " )";
 		}
-		return (!empty($data)) ? $this->query("INSERT" . ($ignore ? " IGNORE" : NULL) . " INTO `{$table}` ( `{$c}` ) VALUES {$v}" . ($duplicateupdate ? " ON DUPLICATE KEY UPDATE {$duplicateupdate}" : NULL) . ";") ? ($multirow ? TRUE : $this->insertId()) : FALSE : FALSE;
+		return (!empty($data)) ? $this->query("INSERT" . ($ignore ? " IGNORE" : NULL) . " INTO `{$table}` ( `{$c}` ) VALUES {$v}" . ($duplicateupdate ? " ON DUPLICATE KEY UPDATE {$duplicateupdate}" : NULL) . ";") ? ($multirow ? TRUE : $this->insertID()) : FALSE : FALSE;
 	}
 	
 	/** Imports CSV data to Table with possibility to update rows while import.
@@ -676,7 +718,7 @@ class MySQL_wrapper {
 				}
 			}
 			
-			$this->query("CREATE TABLE `{$table}` ( " . implode(', ', $columns) . " ) ENGINE=InnoDB DEFAULT CHARSET={$this->character};");
+			$this->query("CREATE TABLE `{$table}` ( " . implode(', ', $columns) . " ) ENGINE=InnoDB DEFAULT CHARSET={$this->charset};");
 			if ($this->importCSV2Table($file, $table, $delimiter, $enclosure, $escape, $ignore, $update, ($getColumnsFrom == 'generate') ? 'table' : 'file', $newLine) > 0) {
 				$columns = $this->fetchQueryToArray("SELECT * FROM `{$table}` PROCEDURE ANALYSE ( 10, 30 );", FALSE);
 				$change = array();
@@ -750,8 +792,8 @@ class MySQL_wrapper {
 	 * @param 	void
 	 * @return 	integer
 	 */
-	function insertId() {
-		return $this->link ? mysql_insert_id($this->link) : FALSE;
+	function insertID() {
+		return $this->call('insert_id');
 	}
 	
 	/** Retrieves the number of rows from table based on certain conditions.
@@ -920,8 +962,8 @@ class MySQL_wrapper {
 	function error($msg, $web = FALSE) {
 		if ($this->displayError || $this->logErrors || $this->emailErrors) {
 			if ($this->link) {
-				$this->error = @mysql_error($this->link);
-				$this->errorNo = @mysql_errno($this->link);
+				$this->error = $this->call('error');
+				$this->errorNo = $this->call('errno');
 			}
 			$nl 	= empty($_SERVER['REMOTE_ADDR']) ? PHP_EOL : "<br>" . PHP_EOL;
 			$web 	= empty($_SERVER['REMOTE_ADDR']) ? FALSE : $web;
