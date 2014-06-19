@@ -157,6 +157,32 @@ $db->close();
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 // Example 5
+// Prepared statements (works only with MySQLi!) 
+///////////////////////////////////////////////////////////////////////////////////////////
+$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect
+$db->connect();
+
+$name = 'Radovan';
+
+$stmt = $db->call('prepare', 'SELECT * FROM `table` WHERE `firstname` = ?;');
+$stmt->bind_param('s', $name);
+
+$stmt->execute();
+
+$result = $stmt->get_result();
+while ($row = $result->fetch_assoc()) {
+    // do something
+	// print_r($row);
+	// ...
+}
+
+// Close connection
+$db->close();
+///////////////////////////////////////////////////////////////////////////////////////////
+
+// Example 5
 // Faster select exmaple (fetch query to array)
 ///////////////////////////////////////////////////////////////////////////////////////////
 $db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
