@@ -955,6 +955,143 @@ class MySQL_wrapper {
 		}
 	}
 	
+	/** Init table revision
+	 * @param 	string		$table	- Table name
+	 */
+	function initTableRevision($table) {
+		// Create tmp table
+		$this->query("CREATE TABLE `{$table}_revision` LIKE `{$table}`;");
+		
+		// Remove auto_increment if exists
+		$change = array();
+		$this->query("SHOW COLUMNS FROM `{$table}_revision` WHERE `Key` NOT LIKE '' OR `Default` IS NOT NULL;");
+		if($this->affected > 0){
+			while ($row = $this->fetchArray()) {
+				$change[$row['Field']] = "CHANGE `{$row['Field']}` `{$row['Field']}` {$row['Type']} DEFAULT NULL";
+			}
+			$this->freeResult();
+		}
+		
+		// Add revision fields
+		$change['revision_timestamp'] = "ADD `revision_timestamp` TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP FIRST";
+		$change['revision_action'] = "ADD `revision_action` enum('INSERT', 'UPDATE', 'DELETE') DEFAULT NULL FIRST";
+		$change['revision_id'] = "ADD `revision_id` INT( 11 ) NOT NULL AUTO_INCREMENT FIRST";
+		
+		// Add keys
+		$change[] = "ADD KEY (`revision_action`, `revision_timestamp`)";
+		$change[] = "ADD KEY `revision_timestamp` (`revision_timestamp`)";
+		$change[] = "ADD PRIMARY KEY `revision_id` (`revision_id`)";
+		
+		// Alter revision table
+		$this->query("ALTER TABLE `{$table}_revision` " . implode(', ', $change) . ";");
+		
+		$columns = $this->getColumns($table);
+		
+		// Insert trigger
+		$this->query(
+			"CREATE TRIGGER `{$table}_revision_insert` AFTER INSERT ON `{$table}` " .
+			"FOR EACH ROW " .
+			"BEGIN " .
+				"INSERT INTO `{$table}_revision` (`revision_action`, `revision_timestamp`, `" . implode('`, `', $columns) . "`) VALUES ('INSERT', NOW(),  NEW.`" . implode('`, NEW.`', $columns) . "`); " .
+			"END;"
+		);
+		
+		// Update trigger
+		$this->query(
+			"CREATE TRIGGER `{$table}_revision_update` AFTER UPDATE ON `{$table}` " .
+			"FOR EACH ROW " .
+			"BEGIN " .
+				"INSERT INTO `{$table}_revision` (`revision_action`, `revision_timestamp`, `" . implode('`, `', $columns) . "`) VALUES ('UPDATE', NOW(), NEW.`" . implode('`, NEW.`', $columns) . "`); " .
+			"END;" 
+		);
+		
+		// Delete trigger
+		$this->query(
+			"CREATE TRIGGER `{$table}_revision_delete` AFTER DELETE ON `{$table}` " .
+			"FOR EACH ROW " .
+			"BEGIN " .
+				"INSERT INTO `{$table}_revision` (`revision_action`, `revision_timestamp`, `" . implode('`, `', $columns) . "`) VALUES ('DELETE', NOW(), OLD.`" . implode('`, OLD.`', $columns) . "`); " .
+			"END;"
+		);
+		
+		// Insert existing data into revision table
+		$this->query(
+			"INSERT INTO `{$table}_revision` (`revision_action`, `revision_timestamp`, `" . implode('`, `', $columns) . "`) " .
+			"SELECT 'INSERT' AS `revision_action`, NOW() AS `revision_timestamp`, `{$table}`.* FROM `{$table}`;"
+		);
+	}
+	
+	/** Create table from current revision time
+	 * @param 	string		$table		- New table name
+	 * @param	string 		$rev_table	- Revision table
+	 * @param	string 		$id_field	- Unique field name
+	 * @param	datetime	- Revision time
+	 */
+	function createTableFromRevisionTime($table, $rev_table, $id_field, $time) {
+		$time = strtotime($time);
+		$columns = $this->getColumns($rev_table);
+		
+		// Status at the time, use for update
+		$this->query(
+			"CREATE TABLE `{$table}` " .
+			"SELECT `" . implode('`, `', $columns) . "` " .
+			"FROM (" .
+					"SELECT `" . implode('`, `', $columns) . "` " .
+					"FROM `{$rev_table}_revision` " .
+					"WHERE `revision_timestamp` <= STR_TO_DATE('" . date('Y-m-d H:i:s', $time) . "', '%Y-%m-%d %H:%i:%s') " .
+					"ORDER BY `revision_timestamp` DESC".
+				") AS `b` " .
+			"WHERE `{$id_field}` NOT IN(" .
+				"SELECT `{$id_field}` " .
+				"FROM `{$rev_table}_revision` " .
+				"WHERE `revision_timestamp` <= STR_TO_DATE('" . date('Y-m-d H:i:s', $time) . "', '%Y-%m-%d %H:%i:%s') AND `revision_action` LIKE 'DELETE'" .
+			") GROUP BY `{$id_field}`;"
+		);
+	}
+	
+	/** Restore table from current revision time
+	 * @param 	string		$table		- New table name
+	 * @param	string 		$id_field	- Unique field name
+	 * @param	datetime	- Revision time
+	 */
+	function restoreTableFromRevisionTime($table, $id_field, $time) {
+		$time = strtotime($time);
+		$columns = $this->getColumns($table);
+		$cols = array();
+		foreach ($columns as $c) {
+			$cols[] = "`{$c}` = VALUES(`{$c}`)";
+		}
+		
+		// Remove added items after defined time
+		$this->query(
+			"DELETE FROM `{$table}` " .
+			"WHERE `{$id_field}` IN(" .
+				"SELECT `{$id_field}` " .
+				"FROM `{$table}_revision` " .
+				"WHERE `revision_action` = 'INSERT' AND `revision_timestamp` > STR_TO_DATE('" . date('Y-m-d H:i:s', $time) . "', '%Y-%m-%d %H:%i:%s') " .
+				"GROUP BY `{$id_field}`" .
+			");"
+		);
+		
+		// Update
+		$this->query(
+			"INSERT INTO `{$table}` (`" . implode('`, `', $columns) . "`) " .
+				"SELECT `" . implode('`, `', $columns) . "` " .
+				"FROM (" .
+						"SELECT `" . implode('`, `', $columns) . "` " .
+						"FROM `{$table}_revision` " .
+						"WHERE `revision_timestamp` <= STR_TO_DATE('" . date('Y-m-d H:i:s', $time) . "', '%Y-%m-%d %H:%i:%s') " .
+						"ORDER BY `revision_timestamp` DESC" .
+					") AS `b` 
+				WHERE `{$id_field}` NOT IN(" .
+					"SELECT `{$id_field}` " .
+					"FROM `{$table}_revision` " .
+					"WHERE `revision_timestamp` <= STR_TO_DATE('" . date('Y-m-d H:i:s', $time) . "', '%Y-%m-%d %H:%i:%s') AND `revision_action` LIKE 'DELETE'" .
+				") GROUP BY `{$id_field}` " .
+			"ON DUPLICATE KEY UPDATE " . implode(', ', $cols) . ";"
+		);
+	}
+	
 	/** Prints error message
 	 * @param 	string		$msg	- Message
 	 * @param 	boolean 	$web 	- HTML (TRUE) or Plaint text
