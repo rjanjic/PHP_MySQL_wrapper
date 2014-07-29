@@ -993,7 +993,7 @@ class MySQL_wrapper {
 		// Add revision fields
 		$change['revision_timestamp'] = "ADD `revision_timestamp` TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP FIRST";
 		$change['revision_action'] = "ADD `revision_action` enum('INSERT', 'UPDATE', 'DELETE') DEFAULT NULL FIRST";
-		$change['revision_user'] = "ADD `revision_user` CHAR( 16 ) NOT NULL FIRST";
+		$change['revision_user'] = "ADD `revision_user` CHAR( 256 ) NOT NULL FIRST";
 		$change['revision_id'] = "ADD `revision_id` INT NOT NULL AUTO_INCREMENT FIRST";
 
 		// Add keys
