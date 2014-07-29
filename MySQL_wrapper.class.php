@@ -959,31 +959,49 @@ class MySQL_wrapper {
 	 * @param 	string		$table	- Table name
 	 */
 	function initTableRevision($table) {
+		// Revision table name
+		$rev_table = "{$table}_revision";
+		
 		// Create tmp table
-		$this->query("CREATE TABLE `{$table}_revision` LIKE `{$table}`;");
+		$this->query("CREATE TABLE `{$rev_table}` LIKE `{$table}`;");
 		
 		// Remove auto_increment if exists
 		$change = array();
-		$this->query("SHOW COLUMNS FROM `{$table}_revision` WHERE `Key` NOT LIKE '' OR `Default` IS NOT NULL;");
+		$this->query("SHOW COLUMNS FROM `{$rev_table}` WHERE `Key` NOT LIKE '' OR `Default` IS NOT NULL;");
 		if($this->affected > 0){
 			while ($row = $this->fetchArray()) {
-				$change[$row['Field']] = "CHANGE `{$row['Field']}` `{$row['Field']}` {$row['Type']} DEFAULT NULL";
+				$change[$row['Field']] = "CHANGE `{$row['Field']}` `{$row['Field']}` {$row['Type']} DEFAULT " . (($row['Extra']) ? 0 : 'NULL');
 			}
 			$this->freeResult();
 		}
+		// Alter revision table
+		$this->query("ALTER TABLE `{$rev_table}` " . implode(', ', $change) . ";");
 		
+		
+		// Remove indexes from revision table
+		$this->query("SHOW INDEXES FROM `{$rev_table}`;");
+		$drop = array();
+		if($this->affected > 0){
+			while ($row = $this->fetchArray()) {
+				$drop[] = "DROP INDEX `{$row['Key_name']}`";
+			}
+			$this->freeResult();
+		}
+		$this->query("ALTER TABLE `{$rev_table}` " . implode(', ', $drop) . ";");
+		
+		$change = array();
 		// Add revision fields
 		$change['revision_timestamp'] = "ADD `revision_timestamp` TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP FIRST";
 		$change['revision_action'] = "ADD `revision_action` enum('INSERT', 'UPDATE', 'DELETE') DEFAULT NULL FIRST";
-		$change['revision_id'] = "ADD `revision_id` INT( 11 ) NOT NULL AUTO_INCREMENT FIRST";
-		
+		$change['revision_user'] = "ADD `revision_user` CHAR( 16 ) NOT NULL FIRST";
+		$change['revision_id'] = "ADD `revision_id` INT NOT NULL AUTO_INCREMENT FIRST";
+
 		// Add keys
 		$change[] = "ADD KEY (`revision_action`, `revision_timestamp`)";
 		$change[] = "ADD KEY `revision_timestamp` (`revision_timestamp`)";
 		$change[] = "ADD PRIMARY KEY `revision_id` (`revision_id`)";
-		
 		// Alter revision table
-		$this->query("ALTER TABLE `{$table}_revision` " . implode(', ', $change) . ";");
+		$this->query("ALTER TABLE `{$rev_table}` " . implode(', ', $change) . ";");
 		
 		$columns = $this->getColumns($table);
 		
@@ -992,7 +1010,7 @@ class MySQL_wrapper {
 			"CREATE TRIGGER `{$table}_revision_insert` AFTER INSERT ON `{$table}` " .
 			"FOR EACH ROW " .
 			"BEGIN " .
-				"INSERT INTO `{$table}_revision` (`revision_action`, `revision_timestamp`, `" . implode('`, `', $columns) . "`) VALUES ('INSERT', NOW(),  NEW.`" . implode('`, NEW.`', $columns) . "`); " .
+				"INSERT INTO `{$rev_table}` (`revision_action`, `revision_timestamp`, `revision_user`, `" . implode('`, `', $columns) . "`) VALUES ('INSERT', NOW(), USER(),  NEW.`" . implode('`, NEW.`', $columns) . "`); " .
 			"END;"
 		);
 		
@@ -1001,7 +1019,7 @@ class MySQL_wrapper {
 			"CREATE TRIGGER `{$table}_revision_update` AFTER UPDATE ON `{$table}` " .
 			"FOR EACH ROW " .
 			"BEGIN " .
-				"INSERT INTO `{$table}_revision` (`revision_action`, `revision_timestamp`, `" . implode('`, `', $columns) . "`) VALUES ('UPDATE', NOW(), NEW.`" . implode('`, NEW.`', $columns) . "`); " .
+				"INSERT INTO `{$rev_table}` (`revision_action`, `revision_timestamp`, `revision_user`, `" . implode('`, `', $columns) . "`) VALUES ('UPDATE', NOW(), USER(), NEW.`" . implode('`, NEW.`', $columns) . "`); " .
 			"END;" 
 		);
 		
@@ -1010,20 +1028,20 @@ class MySQL_wrapper {
 			"CREATE TRIGGER `{$table}_revision_delete` AFTER DELETE ON `{$table}` " .
 			"FOR EACH ROW " .
 			"BEGIN " .
-				"INSERT INTO `{$table}_revision` (`revision_action`, `revision_timestamp`, `" . implode('`, `', $columns) . "`) VALUES ('DELETE', NOW(), OLD.`" . implode('`, OLD.`', $columns) . "`); " .
+				"INSERT INTO `{$rev_table}` (`revision_action`, `revision_timestamp`, `revision_user`, `" . implode('`, `', $columns) . "`) VALUES ('DELETE', NOW(), USER(), OLD.`" . implode('`, OLD.`', $columns) . "`); " .
 			"END;"
 		);
 		
 		// Insert existing data into revision table
 		$this->query(
-			"INSERT INTO `{$table}_revision` (`revision_action`, `revision_timestamp`, `" . implode('`, `', $columns) . "`) " .
-			"SELECT 'INSERT' AS `revision_action`, NOW() AS `revision_timestamp`, `{$table}`.* FROM `{$table}`;"
+			"INSERT INTO `{$rev_table}` (`revision_action`, `revision_timestamp`, `revision_user`, `" . implode('`, `', $columns) . "`) " .
+			"SELECT 'INSERT' AS `revision_action`, NOW() AS `revision_timestamp`, USER() AS `revision_user`, `{$table}`.* FROM `{$table}`;"
 		);
 	}
 	
 	/** Create table from current revision time
 	 * @param 	string		$table		- New table name
-	 * @param	string 		$rev_table	- Revision table
+	 * @param	string 		$rev_table	- Revision table (origin table)
 	 * @param	string 		$id_field	- Unique field name
 	 * @param	datetime	- Revision time
 	 */
