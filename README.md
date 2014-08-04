@@ -812,3 +812,40 @@ $db->query("select * from asdf2");
 // Close connection
 $db->close();
 ```
+
+*Table revision*
+```php
+
+$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect
+$db->connect();
+
+// Init table revision (do this only once!)
+$db->initTableRevision('rev-table');
+
+// Time to restore to ... 
+$time = '2014-06-25 14:26:03';
+
+/** Create table from current revision time
+ * @param 	string		$table		- New table name
+ * @param	string 		$rev_table	- Revision table (origin table)
+ * @param	string 		$id_field	- Unique field name
+ * @param	datetime	- Revision time
+ */
+// $db->createTableFromRevisionTime($table, $rev_table, $id_field, $time);
+		
+$db->createTableFromRevisionTime('rev-table' . '-' . $time, 'rev-table', 'id', $time);
+
+/** Restore table from current revision time
+ * @param 	string		$table		- New table name
+ * @param	string 		$id_field	- Unique field name
+ * @param	datetime	- Revision time
+ */
+//$db->restoreTableFromRevisionTime($table, $id_field, $time);
+
+$db->restoreTableFromRevisionTime('rev-table', 'id', $time);
+
+// Close connection
+$db->close();
+```
