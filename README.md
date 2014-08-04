@@ -32,11 +32,6 @@ define('MySQL_DB', 'test');
 
 *Connect to a given MySQL server*
 ```php
-
-// Example 1
-// Connection example
-//
-
 $db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect
@@ -44,13 +39,10 @@ $db->connect();
 
 // Close connection
 $db->close();
+```
 
-
-//
-// Example 2
-// Connection example
-//
-
+*Connection example*
+```php
 $db = new MySQL_wrapper;
 
 // Connect 1
@@ -82,11 +74,10 @@ $db->connect(true);
 
 // Close connection 3
 $db->close();
+```
 
-// Example 3
-// Connection example multi host, db manipulation
-///////////////////////////////////////////////////////////////////////////////////////////
-
+*Connection example multi host, db manipulation*
+```php
 // Inst. 1
 $db1 = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
