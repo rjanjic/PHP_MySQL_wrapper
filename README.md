@@ -23,9 +23,7 @@ It can:
 
 
 ```php
-include "MySQL_wrapper.class.php";
-
-// Set your connectivity settings here
+// Set your connectivity settings
 define('MySQL_HOST', 'localhost');
 define('MySQL_USER', 'root');
 define('MySQL_PASS', '');
@@ -255,5 +253,308 @@ $db->close();
 
 *Rows, Cols num*
 ```php
+$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
+// Connect to host
+$db->connect();
+
+// Do query
+$db->query('SELECT * FROM `table`');
+
+$cols = $db->numFields();
+$rows = $db->numRows();
+
+// ...
+echo "Cols: {$cols}, Rows: {$rows}";
+
+// Free result memory
+$db->freeResult();
+
+// Close connection
+$db->close();
+```
+
+*Count rows*
+```php
+$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect to host
+$db->connect();
+
+// Count all
+$count = $db->countRows('table');
+
+// Count with condition
+$count2 = $db->countRows('table', "`date` = '".date("Y-m-d")."'");
+
+// ...
+echo "Count all: {$count}, Count today: {$count2}";
+
+// More info
+/** Retrieves the number of rows from table based on certain conditions.
+ * @param 	string 		$table 	- Table name
+ * @param 	string 		$where 	- WHERE Clause
+ * @return 	integer or false
+ */
+// $db->countRows($table, $where = NULL)
+
+// Close connection
+$db->close();
+```
+
+*Array to insert*
+```php
+$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect to host
+$db->connect();
+
+// Array data
+// [fealdname] = feald value
+$data = array();
+$data['firstname'] = 'Radovan';
+$data['surname'] = 'Janjic';
+$data['email'] = 'rade@it-radionica.com';
+// reserved values 'null', 'now()', 'curtime()', 'localtime()', 'localtime', 'utc_date()', 'utc_time()', 'utc_timestamp()'
+$data['date'] = 'now()';
+
+// $db->arrayToInsert( ... ) returns insert id
+$insert_id = $db->arrayToInsert('table', $data);
+echo "Last insert id is: {$insert_id}";
+
+// Array data
+// [fealdname] = feald value
+$data = array();
+$data['firstname'] = 'Radovan';
+$data['surname'] = 'Janjic';
+$data['email'] = 'rade@it-radionica.com';
+$data['date'] = 'now()';
+
+// [fealdname] = feald value
+$data2 = array();
+$data2['firstname'] = 'Radovan';
+$data2['surname'] = 'Janjic';
+$data2['email'] = 'rade@it-radionica.com';
+$data2['date'] = 'now()';
+
+// $db->arrayToInsert( ... ) multirow returns TRUE on success
+$db->arrayToInsert('table', array($data, $data2 /*, $data3 .... */ ));
+
+
+// More options
+/** Creates an sql string from an associate array
+ * @param 	string 		$table 	- Table name
+ * @param 	array 		$data 	- Data array Eg. $data['column'] = 'val';
+ * @param 	boolean		$ingore	- INSERT IGNORE (row won't actually be inserted if it results in a duplicate key)
+ * @param 	string 		$duplicateupdate 	- ON DUPLICATE KEY UPDATE (The ON DUPLICATE KEY UPDATE clause can contain multiple column assignments, separated by commas.)
+ * @return 	insert id or false
+ */
+// $db->arrayToInsert($table, $data, $ignore = FALSE, $duplicateupdate = NULL)
+
+// Close connection
+$db->close();
+```
+*Next AutoIncrement*
+```php
+$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect to host
+$db->connect();
+
+// Returns next auto increment value
+$auto_increment = $db->nextAutoIncrement('table');
+
+echo "Next auto increment id is: {$auto_increment}";
+
+// Close connection
+$db->close();
+```
+
+*Array to update*
+```php
+$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect to host
+$db->connect();
+
+// Array data
+// [fealdname] = feald value
+$data = array();
+$data['firstname'] = 'Radovan';
+$data['surname'] = 'Janjic';
+
+// Reserved values: null, now(), curtime(), localtime(), localtime, utc_date(), utc_time(), utc_timestamp()
+$data['email'] = 'null';
+$data['date'] = 'now()';
+
+
+$db->arrayToUpdate('table', $data, "`id` = {$insert_id}");
+if($db->affected > 0){
+	echo "Updated: {$db->affected} row(s).";
+}
+
+// Array data
+// [fealdname] = feald value
+$data = array();
+$data['id'] = 1; // key
+$data['firstname'] = 'foo';
+$data['surname'] = 'bar';
+$data['email'] = 'rade@it-radionica.com';
+$data['date'] = 'now()';
+
+// [fealdname] = feald value
+$data2 = array();
+$data2['id'] = 2; // key 
+$data2['firstname'] = 'Radovana';
+$data2['surname'] = 'Janjic';
+$data2['email'] = 'rade@it-radionica.com';
+$data2['date'] = 'now()';
+
+// $db->arrayToUpdate( ... ) multirow returns TRUE on success
+$db->arrayToUpdate('table', array($data, $data2 /*, $data3 .... */ ));
+
+// More options
+/** Creates an sql string from an associate array
+ * @param 	string 		$table 	- Table name
+ * @param 	array 		$data 	- Data array Eg. $data['column'] = 'val';
+ * @param 	string 		$where 	- MySQL WHERE Clause
+ * @param 	integer 	$limit 	- Limit offset
+ * @param 	resource 	$link 	- link identifier
+ * @return 	number of updated rows or false
+ */
+// $db->arrayToUpdate($table, $data, $where = NULL, $limit = 0, $link = 0);
+
+// Close connection
+$db->close();
+```
+
+*Delete row(s)*
+```php
+$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect to host
+$db->connect();
+
+// Delete row
+$db->deleteRow('table', "`id` = {$insert_id}");
+
+if($db->affected > 0) {
+	echo "Deleted: {$db->affected} row(s).";
+}
+// More options
+/** Delete row(s) from table based on certain conditions.
+ * @param 	string 		$table 	- Table name
+ * @param 	string 		$where 	- WHERE Clause
+ * @param 	integer 	$limit 	- Limit offset
+ * @param 	resource 	$link 	- link identifier
+ * @return 	number of deleted rows or false
+ */
+// $db->deleteRow($table, $where = NULL, $limit = 0, $link = 0);
+
+// Close connection
+$db->close();
+```
+
+*Get table columns*
+```php
+$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect
+$db->connect();
+
+// Get table columns into array
+$array = $db->getColumns('table');
+
+print_r($array);
+
+// Close connection
+$db->close();
+```
+
+*Basic Table Operation*
+```php
+$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect to host
+$db->connect();
+
+// Copy table (with data included)
+$db->copyTable('table', 'table_copy');
+
+// Copy table (with data included)
+$db->copyTable('table', 'table_copy4');
+
+// Copy table structure
+$db->copyTable('table', 'table_copy2', FALSE);
+
+// Rename table
+$db->renameTable(array('table_copy' => 'table_copy3'));
+
+// Swap table names
+$db->renameTable(array('table_copy3' => 'tmp_table', 'table_copy2' => 'table_copy3', 'tmp_table' => 'table_copy3'));
+
+// Truncate table (empty)
+$db->truncateTable('table_copy2');
+
+// Drop one table
+$db->dropTable('table_copy4');
+
+// Drop multiple tables
+$db->dropTable(array('table_copy3', 'table_copy2'));
+
+// Close connection
+$db->close();
+```
+
+*Get database size*
+```php
+$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect
+$db->connect();
+
+/** Data Base size in B / KB / MB / GB / TB
+ * @param 	string	 	$sizeIn		- Size in B / KB / MB / GB / TB
+ * @param 	integer	 	$round		- Round on decimals
+ * @param 	resource 	$link 		- Link identifier
+ * @return 	- Size in B / KB / MB / GB / TB
+ */
+// function getDataBaseSize($sizeIn = 'MB', $round = 2, $link = 0);
+
+echo 'Database size is: ', $db->getDataBaseSize('mb', 2), ' MB';
+
+// Close connection
+$db->close();
+```
+
+*Loging queries and errors*
+```php
+$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect to host
+$db->connect();
+
+// Default is FALSE, use TRUE only for debuging
+$db->logQueries = TRUE;
+
+// This is useful to be TRUE!
+$db->logErrors = TRUE;
+
+// Default is FALSE, use TRUE only for debuging (security reasons!)
+$db->displayError = TRUE;
+
+// Date / Time format for log
+$db->dateFormat	= "Y-m-d H:i:s"; 
+
+// Log file
+$db->logFilePath = 'log-mysql.txt';
+
+// Query for this function will be logged
+$db->getColumns('table');
+
+// This query has error
+$db->query('SELECT * FROM `table` asfd!@#$');
+
+// Close connection
+$db->close();
 ```
