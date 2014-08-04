@@ -183,29 +183,6 @@ while ($row = $result->fetch_assoc()) {
 $db->close();
 ```
 
-*Prepared statements (works only with MySQLi!)*
-```php
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
-
-// Connect
-$db->connect();
-
-// Fetch query to array
-$array = $db->fetchQueryToArray('SELECT * FROM `table`');
-
-// Print array
-print_r($array);
-
-// Returns only first row
-$array = $db->fetchQueryToArray('SELECT * FROM `table`', TRUE);
-
-// Print array
-print_r($array);
-
-// Close connection
-$db->close();
-```
-
 *Prepared statements (works only with MySQLi!) - if mysqlnd driver is not installed*
 ```php
 $db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
@@ -230,6 +207,29 @@ while ($stmt->fetch()) {
 
 // Print data
 print_r($data);
+
+// Close connection
+$db->close();
+```
+
+*Fetch query to array*
+```php
+$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect
+$db->connect();
+
+// Fetch query to array
+$array = $db->fetchQueryToArray('SELECT * FROM `table`');
+
+// Print array
+print_r($array);
+
+// Returns only first row
+$array = $db->fetchQueryToArray('SELECT * FROM `table`', TRUE);
+
+// Print array
+print_r($array);
 
 // Close connection
 $db->close();
