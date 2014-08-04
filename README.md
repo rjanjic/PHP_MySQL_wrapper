@@ -558,3 +558,257 @@ $db->query('SELECT * FROM `table` asfd!@#$');
 // Close connection
 $db->close();
 ```
+
+*Export Table to CSV*
+```php
+$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect
+$db->connect();
+
+// Export all data
+$db->exportTable2CSV('table', 'test_files/test-1.txt');
+
+// Export two or more columns
+$db->exportTable2CSV('table', 'test_files/test-2.txt', 'firstname, surname');
+
+// Export two or more columns using array
+$db->exportTable2CSV('table', 'test_files/test-3.txt', array('firstname', 'surname', 'date'));
+
+// Export all columns where id < 8 and limit 1, 5
+$db->exportTable2CSV('table', 'test_files/test-4.txt', '*', 'id < 8', '1,5');
+
+// More options
+/** Export table data to CSV file.
+ * @param 	string 		$table 			- Table name
+ * @param 	string		$file			- CSV File path
+ * @param 	mixed 		$columns 		- SQL ( * or column names or array with column names)
+ * @param 	string 		$where 			- MySQL WHERE Clause
+ * @param 	integer 	$limit 			- Limit offset
+ * @param	string		$delimiter		- COLUMNS TERMINATED BY (Default: ',')
+ * @param	string 		$enclosure		- OPTIONALLY ENCLOSED BY (Default: '"')
+ * @param 	string		$escape 		- ESCAPED BY (Default: '\')
+ * @param 	string 		$newLine		- New line detelimiter (Default: \n)
+ * @param 	boolean		$showColumns 	- Columns names in first line
+ * @return 	number of inserted rows or false
+ */
+// $db->exportTable2CSV($table, $file, $columns = '*', $where = NULL, $limit = 0, $delimiter = ',', $enclosure = '"', $escape = '\\', $newLine = '\n', $showColumns = TRUE);
+
+// Close connection
+$db->close();
+```
+
+*Query to CSV*
+```php
+$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect
+$db->connect();
+
+$path = $db->query2CSV('select * from `table` limit 10', 'test_files/test-query2csv.csv');
+echo 'Query exported to CSV file: ', $path;
+
+// Example 2
+$path = $db->query2CSV('select * from `table` limit 2,2', 'test_files/test-query2csv.csv');
+
+/** Export query to CSV file.
+ * @param 	string 		$sql 			- MySQL Query
+ * @param 	string		$file			- CSV File path
+ * @param	string		$delimiter		- COLUMNS TERMINATED BY (Default: ',')
+ * @param	string 		$enclosure		- OPTIONALLY ENCLOSED BY (Default: '"')
+ * @param 	string		$escape 		- ESCAPED BY (Default: '\')
+ * @param 	string 		$newLine		- New line delimiter (Default: \n)
+ * @param 	boolean		$showColumns 	- Columns names in first line
+ * @return 	- File path
+ */
+// function query2CSV($sql, $file, $delimiter = ',', $enclosure = '"', $escape = '\\', $newLine = '\n', $showColumns = TRUE);
+
+// Close connection
+$db->close();
+```
+
+*Import CSV to Table*
+```php
+$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect
+$db->connect();
+
+// Import all data
+$db->importCSV2Table('test_files/test-1.txt', 'table');
+
+// More options
+/** Imports CSV data to Table with possibility to update rows while import.
+ * @param 	string		$file			- CSV File path
+ * @param 	string 		$table 			- Table name
+ * @param	string		$delimiter		- COLUMNS TERMINATED BY (Default: ',')
+ * @param	string 		$enclosure		- OPTIONALLY ENCLOSED BY (Default: '"')
+ * @param 	string		$escape 		- ESCAPED BY (Defaul: '\')
+ * @param 	integer 	$ignore 		- Number of ignored rows (Default: 1)
+ * @param 	array		$update 		- If row fields needed to be updated eg date format or increment (SQL format only @FIELD is variable with content of that field in CSV row) $update = array('SOME_DATE' => 'STR_TO_DATE(@SOME_DATE, "%d/%m/%Y")', 'SOME_INCREMENT' => '@SOME_INCREMENT + 1')
+ * @param 	string 		$getColumnsFrom	- Get Columns Names from (file or table) - this is important if there is update while inserting (Default: file)
+ * @param 	string 		$newLine		- New line detelimiter (Default: \n)
+ * @return 	number of inserted rows or false
+ */
+// $db->importCSV2Table($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = '\n');
+
+// Close connection
+$db->close();
+```
+
+*Create table from CSV file*
+```php
+$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect to host
+$db->connect(); 
+
+$db->dropTable('csv_to_table_test');
+$db->createTableFromCSV('test_files/countrylist.csv', 'csv_to_table_test');
+
+$db->dropTable('csv_to_table_test_no_column_names');
+$db->createTableFromCSV('test_files/countrylist1.csv', 'csv_to_table_test_no_column_names', ',', '"', '\\', 0, array(), 'generate', '\r\n');
+
+/** Create table from CSV file and imports CSV data to Table with possibility to update rows while import.
+ * @param 	string		$file			- CSV File path
+ * @param 	string 		$table 			- Table name
+ * @param	string		$delimiter		- COLUMNS TERMINATED BY (Default: ',')
+ * @param	string 		$enclosure		- OPTIONALLY ENCLOSED BY (Default: '"')
+ * @param 	string		$escape 		- ESCAPED BY (Default: '\')
+ * @param 	integer 	$ignore 		- Number of ignored rows (Default: 1)
+ * @param 	array		$update 		- If row fields needed to be updated eg date format or increment (SQL format only @FIELD is variable with content of that field in CSV row) $update = array('SOME_DATE' => 'STR_TO_DATE(@SOME_DATE, "%d/%m/%Y")', 'SOME_INCREMENT' => '@SOME_INCREMENT + 1')
+ * @param 	string 		$getColumnsFrom	- Get Columns Names from (file or generate) - this is important if there is update while inserting (Default: file)
+ * @param 	string 		$newLine		- New line delimiter (Default: \n)
+ * @return 	number of inserted rows or false
+ */
+// function createTableFromCSV($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = '\r\n');
+
+// Close connection
+$db->close();
+```
+
+*Import and update CSV to Table*
+```php
+$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect
+$db->connect();
+
+// Import and update all data
+$db->importUpdateCSV2Table('test_files/countrylist.csv', 'csv_to_table_test');
+
+// Import and update all data
+$db->importUpdateCSV2Table('test_files/countrylist.csv', 'csv_to_table_test', ',', '"', '\\', 1, array(), 'file', '\r\n');
+// More options
+/** Imports (ON DUPLICATE KEY UPDATE) CSV data in Table with possibility to update rows while import.
+ * @param 	string		$file			- CSV File path
+ * @param 	string 		$table 			- Table name
+ * @param	string		$delimiter		- COLUMNS TERMINATED BY (Default: ',')
+ * @param	string 		$enclosure		- OPTIONALLY ENCLOSED BY (Default: '"')
+ * @param 	string		$escape 		- ESCAPED BY (Defaul: '\')
+ * @param 	integer 	$ignore 		- Number of ignored rows (Default: 1)
+ * @param 	array		$update 		- If row fields needed to be updated eg date format or increment (SQL format only @FIELD is variable with content of that field in CSV row) $update = array('SOME_DATE' => 'STR_TO_DATE(@SOME_DATE, "%d/%m/%Y")', 'SOME_INCREMENT' => '@SOME_INCREMENT + 1')
+ * @param 	string 		$getColumnsFrom	- Get Columns Names from (file or table) - this is important if there is update while inserting (Default: file)
+ * @param 	string 		$newLine		- New line detelimiter (Default: \n)
+ * @return 	number of inserted rows or false
+ */
+// $db->importUpdateCSV2Table($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = '\n');
+
+// Close connection
+$db->close();
+```
+
+*Transactions*
+```php
+$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect
+$db->connect();
+
+// Queries
+$queries = array();
+$queries[] = 'SELECT ...';
+$queries[] = 'INSERT ...';
+$queries[] = 'DELETE ...';
+$queries[] = '...';
+
+// Do Transaction
+$db->transaction($queries);
+
+// Get more info on: http://dev.mysql.com/doc/refman/5.0/en/commit.html
+/** Transaction
+ * @param 	array		$qarr	- Array with Queries
+ * @link	http://dev.mysql.com/doc/refman/5.0/en/commit.html
+ */
+// $db->transaction($qarr = array());
+
+// Close connection
+$db->close();
+```
+
+*String Search and Replace in all or defined Table Columns*
+```php
+$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect
+$db->connect();
+
+// Simple
+$db->strReplace('table', 'firstname', 'search', 'replace');
+
+// Search array & Replace string
+$db->strReplace('table', 'firstname', array('search1', 'search2'), 'replace');
+
+// Search array & Replace array
+$db->strReplace('table', 'firstname', array('search1', 'search2'), array('replace1', 'replace2'));
+
+// Search array of columns (Search array & Replace array) return count of updated fielsd
+$count = $db->strReplace('table', array('firstname', 'surname'), array('search1', 'search2'), array('replace1', 'replace2'));
+
+// String multiple columns
+$db->strReplace('table', 'firstname, surname', 'search', 'replace');
+
+// You can set all columns in table as well
+$db->strReplace('table', '*', 'search', 'replace');
+
+// More options
+/** Replace all occurrences of the search string with the replacement string in MySQL Table Column(s).
+ * @param 	string		$table 	 - Table name
+ * @param 	mixed 		$columns - Search & Replace affected Table columns. An array may be used to designate multiple replacements.
+ * @param 	mixed 		$search  - The value being searched for, otherwise known as the needle. An array may be used to designate multiple needles.
+ * @param 	mixed 		$replace - The replacement value that replaces found search values. An array may be used to designate multiple replacements.
+ * @param 	string 		$where 	 - WHERE Clause
+ * @param 	integer 	$limit 	 - Limit offset
+ * @return  integer 	- Affected rows
+ */
+// function strReplace($table, $columns, $search, $replace, $where = NULL, $limit = 0);
+
+// Close connection
+$db->close();
+```
+
+*E-mail on error / die on error*
+```php
+$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect
+$db->connect(); 
+
+// Send mail on error
+$db->emailErrors = TRUE;
+
+// Die on errors
+$db->dieOnError = TRUE;
+
+// Array of emails
+$db->emailErrorsTo = array('rade@it-radionica.com');
+
+// Do first query
+$db->query("select * from asdf");
+
+// This one will not be executed if first query have error and dieOnError is TRUE
+$db->query("select * from asdf2"); 
+
+// Close connection
+$db->close();
+```
