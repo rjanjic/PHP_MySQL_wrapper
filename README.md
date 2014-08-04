@@ -37,41 +37,51 @@ define('MySQL_DB', 'test');
 
 // Example 1
 // Connection example
-///////////////////////////////////////////////////////////////////////////////////////////
+//
+
 $db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect
 $db->connect(); 
+
 // Close connection
 $db->close();
-///////////////////////////////////////////////////////////////////////////////////////////
 
+
+//
 // Example 2
 // Connection example
-///////////////////////////////////////////////////////////////////////////////////////////
+//
+
 $db = new MySQL_wrapper;
 
-// connect 1
+// Connect 1
 $db->connect(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
 //
 // Connection 1 queries ...
 //
+
 // Close connection 1
 $db->close();
 
 // Connect 2
 $db->connect(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB); 
+
 //
 // Connection 2 queries ...
 //
+
 // Close connection 2
 $db->close();
 
 // Connect with new link
 $db->connect(true);
+
 //
 // Connection 3 queries
 //
+
 // Close connection 3
 $db->close();
 
@@ -79,16 +89,21 @@ $db->close();
 // Connection example multi host, db manipulation
 ///////////////////////////////////////////////////////////////////////////////////////////
 
+// Inst. 1
 $db1 = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Inst. 2
 $db2 = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect host 1
 $db1->connect();
+
 // Connect host 2
 $db2->connect();
 
 // Close connection host 1
 $db1->close();
+
 // Close connection host 2
 $db2->close();
 ```
@@ -96,23 +111,28 @@ $db2->close();
 *Select example with fetch result*
 ```php
 $db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect to host
 $db->connect();
 
 // MySQL query
 $db->query('SELECT * FROM `table`');
 
 // Int affected rows
-if($db->affected){
-	echo "<hr /><strong>Example 4 ( fetch row - array)</strong><pre>";
+if($db->affected > 0){
 	while($row = $db->fetchArray()){
+		// Result
 		print_r($row);
 	}
-	echo "</pre>";
 }
+
+// Free result memory
 $db->freeResult();
 
 // Escape string
 $var = '\'';
+
+// Do query
 $db->query("SELECT * FROM `table` WHERE `firstname` LIKE '{$db->escape($var)}';");
 
 // Param to be escaped
@@ -127,17 +147,113 @@ $params['id'] = 1;
 $params['name'] = 'rado';
 $params['lname'] = 'janjic';
 $params['limit'] = 5;
+
+// Exec query
 $db->query("SELECT * FROM `table` WHERE `firstname` LIKE '@name%' AND `surname` LIKE '%@lname%' OR `id` = @id LIMIT @limit;", $params);
 
 // Int affected rows
-if($db->affected){
-	echo "<hr /><strong>Example 4 ( fetch row - array)</strong><pre>";
+if($db->affected > 0){
 	while($row = $db->fetchArray()){
+		// Print result row
 		print_r($row);
 	}
-	echo "</pre>";
 }
 
+// Free result memory
 $db->freeResult();
+
+// Close connection
 $db->close();
+```
+
+*Prepared statements (works only with MySQLi!)*
+```php
+$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Works only with MySQLi!
+$db->extension = 'mysqli';
+
+// Connect
+$db->connect();
+
+$name = 'Radovan';
+
+$stmt = $db->call('prepare', 'SELECT * FROM `table` WHERE `firstname` = ?;');
+$stmt->bind_param('s', $name);
+
+$stmt->execute();
+
+$result = $stmt->get_result();
+while ($row = $result->fetch_assoc()) {
+    // do something
+	// print_r($row);
+	// ...
+}
+
+// Close connection
+$db->close();
+```
+
+*Prepared statements (works only with MySQLi!)*
+```php
+$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect
+$db->connect();
+
+// Fetch query to array
+$array = $db->fetchQueryToArray('SELECT * FROM `table`');
+
+// Print array
+print_r($array);
+
+// Returns only first row
+print_r($db->fetchQueryToArray('SELECT * FROM `table`', TRUE));
+
+// Close connection
+$db->close();
+```
+
+*Multi results*
+```php
+$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect to host
+$db->connect();
+
+// Result 1
+$r1 = $db->query('SELECT * FROM `table`');
+
+// Result 2
+$r2 = $db->query('SELECT * FROM `table` LIMIT 2');
+
+// Result 1 data
+if($db->numRows($r1)){
+	while($row = $db->fetchArray($r1)){
+		// Print rows
+		print_r($row);
+	}
+}
+
+// Result 2 data
+if($db->numRows($r2)){
+	while($row = $db->fetchArray($r2)){
+		// Print rows
+		print_r($row);
+	}
+}
+
+// Free relust 1
+$db->freeResult($r1);
+
+// Free relust 2
+$db->freeResult($r2);
+
+// Close connection
+$db->close();
+```
+
+*Rows, Cols num*
+```php
+
 ```
