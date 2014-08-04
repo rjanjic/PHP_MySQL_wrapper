@@ -206,7 +206,39 @@ $array = $db->fetchQueryToArray('SELECT * FROM `table`');
 print_r($array);
 
 // Returns only first row
-print_r($db->fetchQueryToArray('SELECT * FROM `table`', TRUE));
+$array = $db->fetchQueryToArray('SELECT * FROM `table`', TRUE);
+
+// Print array
+print_r($array);
+
+// Close connection
+$db->close();
+```
+
+*Prepared statements (works only with MySQLi!) - if mysqlnd driver is not installed*
+```php
+$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect
+$db->connect();
+
+$stmt = $db->call('prepare', 'SELECT `id`, `firstname`, `surname`, `email`  FROM `table` WHERE `level` = ?;');
+$stmt->bind_param('i', $level);
+$stmt->execute();
+
+$stmt->bind_result($id, $firstname, $surname, $email);
+$data = array();
+while ($stmt->fetch()) {
+	$data[] = array(
+		'id' 		=> $id,
+		'firstname' 	=> $firstname,
+		'surname' 	=> $surname,
+		'email' 	=> $email
+	);
+}
+
+// Print data
+print_r($data);
 
 // Close connection
 $db->close();
