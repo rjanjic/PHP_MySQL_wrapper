@@ -231,7 +231,7 @@ $data = array();
 while ($stmt->fetch()) {
 	$data[] = array(
 		'id' 		=> $id,
-		'firstname' 	=> $firstname,
+		'firstname' => $firstname,
 		'surname' 	=> $surname,
 		'email' 	=> $email
 	);
