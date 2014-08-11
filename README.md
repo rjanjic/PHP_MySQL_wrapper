@@ -17,10 +17,10 @@ It can:
 - Export query to SCV file
 - Do str_replace in given table for defined columns
 - Table operations
-	-- Rename 
-	-- Copy 
-	-- Truncate 
-	-- Drop table
+    -- Rename 
+    -- Copy 
+    -- Truncate 
+    -- Drop table
 - Get database size
 - Log queries / errors
 - Errors backtrace
