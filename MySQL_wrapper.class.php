@@ -293,7 +293,7 @@ class MySQL_wrapper {
 			unset($l, $p);
 		}
 		if($this->logQueries) $start = $this->getMicrotime();
-		$this->query = $this->call('query', $sql) or $this->error("Connection close failed.");
+		$this->query = $this->call('query', $sql) or $this->error("Query fail -> " . $sql);
 		$this->affected = $this->call('affected_rows');
 		if ($this->query && $this->logQueries) $this->log('QUERY', "EXEC -> " . number_format($this->getMicrotime() - $start, 8) . " -> " . $sql);
 		return $this->query ? $this->query : FALSE;
