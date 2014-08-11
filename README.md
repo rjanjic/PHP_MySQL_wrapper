@@ -3,7 +3,7 @@ PHP_MySQL_wrapper
 
 This class implements a generic MySQL database access wrapper. 
 It can: 
-- [Connect to a given MySQL server](#Connect-to-a-given-MySQL-server)
+- [Connect to a given MySQL server](#connect-to-a-given-mysql-server)
 - Set the connection character set encoding
 - Execute arbitrary queries and return the results in arrays
 - Retrieve the columns of a table
