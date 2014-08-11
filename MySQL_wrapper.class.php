@@ -185,18 +185,18 @@ class MySQL_wrapper {
 	}
 	
 	/** Private clone method to prevent cloning of the instance of the MySQL_wrapper instance.
-     * @return void
-     */
-    private function __clone() {
+	 * @return void
+	 */
+	private function __clone() {
 		// ... void
-    }
+	}
 	
     /** Private unserialize method to prevent unserializing of the MySQL_wrapper instance.
-     * @return void
-     */
-    private function __wakeup() {
+	 * @return void
+	 */
+	private function __wakeup() {
 		// ... void
-    }
+	}
 	
 	/** Call function
 	 * @param 	string 		$func		- function name
