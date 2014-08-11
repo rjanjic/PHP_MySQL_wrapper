@@ -4,6 +4,8 @@ PHP_MySQL_wrapper
 This class implements a generic MySQL database access wrapper. 
 It can: 
 - Connect to a given MySQL server
+-- Examples
+-- Multi host, db manipulation
 - Set the connection character set encoding
 - Execute arbitrary queries and return the results in arrays
 - Retrieve the columns of a table
@@ -21,7 +23,7 @@ It can:
 - Log queries / errors
 - Errors backtrace
 
-
+### Connectivity settings
 ```php
 // Set your connectivity settings
 define('MySQL_HOST', 'localhost');
@@ -30,7 +32,7 @@ define('MySQL_PASS', '');
 define('MySQL_DB', 'test');
 ```
 
-*Connect to a given MySQL server*
+### *Connect to a given MySQL server*
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -45,12 +47,12 @@ $db->connect();
 $db->close();
 ```
 
-*Connection example*
+### *Connection examples*
 ```php
-$db = MySQL_wrapper::getInstance();
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect 1
-$db->connect(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db->connect();
 
 //
 // Connection 1 queries ...
@@ -69,8 +71,8 @@ $db->connect(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 // Close connection 2
 $db->close();
 
-// Connect with new link
-$db->connect(true);
+// Connection 3
+$db->connect();
 
 //
 // Connection 3 queries
@@ -80,7 +82,7 @@ $db->connect(true);
 $db->close();
 ```
 
-*Connection example multi host, db manipulation*
+### *Connection example multi host, db manipulation*
 ```php
 // Inst. 1
 $db1 = MySQL_wrapper::getInstance('host1', MySQL_USER, MySQL_PASS, MySQL_DB);
@@ -105,7 +107,7 @@ $db1->close();
 $db2->close();
 ```
 
-*Select example with fetch result*
+### *Select example with fetch result*
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -163,7 +165,7 @@ $db->freeResult();
 $db->close();
 ```
 
-*Prepared statements (works only with MySQLi!)*
+### *Prepared statements (works only with MySQLi!)*
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -191,7 +193,7 @@ while ($row = $result->fetch_assoc()) {
 $db->close();
 ```
 
-*Prepared statements (works only with MySQLi!) - if mysqlnd driver is not installed*
+### *Prepared statements (works only with MySQLi!) - if mysqlnd driver is not installed*
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -220,7 +222,7 @@ print_r($data);
 $db->close();
 ```
 
-*Fetch query to array*
+### *Fetch query to array*
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -243,7 +245,7 @@ print_r($array);
 $db->close();
 ```
 
-*Multi results*
+### *Multi results*
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -282,7 +284,7 @@ $db->freeResult($r2);
 $db->close();
 ```
 
-*Rows, Cols num*
+### *Rows, Cols num*
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -305,7 +307,7 @@ $db->freeResult();
 $db->close();
 ```
 
-*Count rows*
+### *Count rows*
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -333,7 +335,7 @@ echo "Count all: {$count}, Count today: {$count2}";
 $db->close();
 ```
 
-*Array to insert*
+### *Array to insert*
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -385,7 +387,7 @@ $db->arrayToInsert('table', array($data, $data2 /*, $data3 .... */ ));
 // Close connection
 $db->close();
 ```
-*Next AutoIncrement*
+### *Next AutoIncrement*
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -401,7 +403,7 @@ echo "Next auto increment id is: {$auto_increment}";
 $db->close();
 ```
 
-*Array to update*
+### *Array to update*
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -459,7 +461,7 @@ $db->arrayToUpdate('table', array($data, $data2 /*, $data3 .... */ ));
 $db->close();
 ```
 
-*Delete row(s)*
+### *Delete row(s)*
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -486,7 +488,7 @@ if($db->affected > 0) {
 $db->close();
 ```
 
-*Get table columns*
+### *Get table columns*
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -502,7 +504,7 @@ print_r($array);
 $db->close();
 ```
 
-*Basic Table Operation*
+### *Basic Table Operation*
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -537,7 +539,7 @@ $db->dropTable(array('table_copy3', 'table_copy2'));
 $db->close();
 ```
 
-*Get database size*
+### *Get database size*
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -558,7 +560,7 @@ echo 'Database size is: ', $db->getDataBaseSize('mb', 2), ' MB';
 $db->close();
 ```
 
-*Loging queries and errors*
+### *Loging queries and errors*
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -590,7 +592,7 @@ $db->query('SELECT * FROM `table` asfd!@#$');
 $db->close();
 ```
 
-*Export Table to CSV*
+### *Export Table to CSV*
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -629,7 +631,7 @@ $db->exportTable2CSV('table', 'test_files/test-4.txt', '*', 'id < 8', '1,5');
 $db->close();
 ```
 
-*Query to CSV*
+### *Query to CSV*
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -658,7 +660,7 @@ $path = $db->query2CSV('select * from `table` limit 2,2', 'test_files/test-query
 $db->close();
 ```
 
-*Import CSV to Table*
+### *Import CSV to Table*
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -687,7 +689,7 @@ $db->importCSV2Table('test_files/test-1.txt', 'table');
 $db->close();
 ```
 
-*Create table from CSV file*
+### *Create table from CSV file*
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -718,7 +720,7 @@ $db->createTableFromCSV('test_files/countrylist1.csv', 'csv_to_table_test_no_col
 $db->close();
 ```
 
-*Import and update CSV to Table*
+### *Import and update CSV to Table*
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -749,7 +751,7 @@ $db->importUpdateCSV2Table('test_files/countrylist.csv', 'csv_to_table_test', ',
 $db->close();
 ```
 
-*Transactions*
+### *Transactions*
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -777,7 +779,7 @@ $db->transaction($queries);
 $db->close();
 ```
 
-*String Search and Replace in all or defined Table Columns*
+### *String Search and Replace in all or defined Table Columns*
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -818,7 +820,7 @@ $db->strReplace('table', '*', 'search', 'replace');
 $db->close();
 ```
 
-*E-mail on error / die on error*
+### *E-mail on error / die on error*
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -844,7 +846,7 @@ $db->query("select * from asdf2");
 $db->close();
 ```
 
-*Table revision*
+### *Table revision*
 ```php
 
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
