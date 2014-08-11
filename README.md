@@ -30,7 +30,7 @@ define('MySQL_PASS', '');
 define('MySQL_DB', 'test');
 ```
 
-### *Connect to a given MySQL server*
+### Connect to a given MySQL server
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
