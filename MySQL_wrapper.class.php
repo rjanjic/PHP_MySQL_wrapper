@@ -2,10 +2,10 @@
 /******************************************************************
  * 
  * Projectname:   PHP MySQL Wrapper Class 
- * Version:       1.5
- * Author:        Radovan Janjic <rade@it-radionica.com>
- * Last modified: 14 01 2014
- * Copyright (C): 2012 IT-radionica.com, All Rights Reserved
+ * Version:       1.6
+ * Author:        Radovan Janjic <hi@radovanjanjic.com>
+ * Last modified: 11 08 2014
+ * Copyright (C): 2008-2014 IT-radionica.com, All Rights Reserved
  * 
  * GNU General Public License (Version 2, June 1991)
  *
@@ -34,142 +34,176 @@ class MySQL_wrapper {
 	/** Class Version 
 	 * @var float 
 	 */
-	var $version = '1.5';
+	private $version = '1.6';
+	
+	/** Store the single instance
+	 * @var array
+	 */
+    private static $instance = array();
 	
 	/** MySQL Host name  
 	 * @var string
 	 */
-	var $server = NULL;
+	private $server = NULL;
 	
 	/** MySQL User
 	 * @var string
 	 */
-	var $username = NULL;
+	private $username = NULL;
 	
 	/** MySQL Password
 	 * @var string
 	 */
-	var $password = NULL;
+	private $password = NULL;
 	
 	/** MySQL Database
 	 * @var string
 	 */
-	var $database = NULL;
+	private $database = NULL;
 	
 	/** mysql / mysqli
 	 * @var string
 	 */
-	var $extension = 'mysqli';
+	public $extension = 'mysqli';
 	 
 	/** Connection Charset (Default: UTF-8)
 	 * @var string
 	 */
-	var $charset = 'utf8';
+	public $charset = 'utf8';
 	
 	/** Error Description 
 	 * @var string
 	 * */
-	var $error = NULL;
+	public $error = NULL;
 	
 	/** Error Number 
 	 * @var integer
 	 */
-	var $errorNo = 0;
+	public $errorNo = 0;
 	
 	/** Display Errors (Default: TRUE)
 	 * @var boolean
 	 */
-	var $displayError = TRUE;
+	public $displayError = TRUE;
 	
 	/** Link
 	 * @var resurse
 	 */
-	var $link = 0;
+	private $link = 0;
 	
 	/** Query
 	 * @var resurse
 	 */
-	var $query = 0;
+	private $query = 0;
 	
 	/** Affected Rows 
 	 * @var integer
 	 */
-	var $affected = 0;
+	public $affected = 0;
 	
 	/** Log Queries to file (Default: FALSE)
 	 * @var boolean
 	 */
-	var $logQueries = FALSE;
+	public $logQueries = FALSE;
 	
 	/** Log Errors to file (Default: FALSE)
 	 * @var boolean
 	 */
-	var $logErrors = FALSE;
+	public $logErrors = FALSE;
 	
 	/** Stop script execution on error (Default: FALSE)
 	 * @var boolean
 	 */
-	var $dieOnError = FALSE;
+	public $dieOnError = FALSE;
 	
 	/** E-mail errors (Default: FALSE)
 	 * @var boolean
 	 */
-	var $emailErrors = FALSE;
+	public $emailErrors = FALSE;
 	
 	/** E-mail errors to (array with emails)
 	 * @var array
 	 */
-	var $emailErrorsTo = array();
+	public $emailErrorsTo = array();
 	
 	/** E-mail errors subject
 	 * @var string
 	 */
-	var $emailErrorsSubject = 'MySQL ERROR ON SERVER: %s';
+	public $emailErrorsSubject = 'MySQL ERROR ON SERVER: %s';
 	
 	/** Log Date Format (Default: Y-m-d H:i:s)
 	 * @var string
 	 */
-	var $dateFormat	= 'Y-m-d H:i:s';
+	public $dateFormat	= 'Y-m-d H:i:s';
 	
 	/** Log File Path (Default: log-mysql.txt)
 	 * @var string
 	 */
-	var $logFilePath = 'log-mysql.txt';
+	public $logFilePath = 'log-mysql.txt';
 	
 	/** Reserved words for array to ( insert / update )
 	 * @var array
 	 */
-	var $reserved = array('null', 'now()', 'current_timestamp', 'curtime()', 'localtime()', 'localtime', 'utc_date()', 'utc_time()', 'utc_timestamp()');
+	public $reserved = array('null', 'now()', 'current_timestamp', 'curtime()', 'localtime()', 'localtime', 'utc_date()', 'utc_time()', 'utc_timestamp()');
 	
 	/** Start of MySQL statement for array to ( insert / update )
 	 * @var string
 	 */
-	var $statementStart = 'sql::';
+	public $statementStart = 'sql::';
 	
 	/** REGEX
 	 * @var array
 	 */
-	var $REGEX = array('LIMIT' => '/limit[\s]+([\d]+[\s]*,[\s]*[\d]+[\s]*|[\d]+[\s]*)$/i', 'COLUMN' => '/^[a-z0-9_\-\s]+$/i');
-	 
-	/** Constructor
+	private $REGEX = array('LIMIT' => '/limit[\s]+([\d]+[\s]*,[\s]*[\d]+[\s]*|[\d]+[\s]*)$/i', 'COLUMN' => '/^[a-z0-9_\-\s]+$/i');
+	
+	/** Singleton declaration
+	 * @param 	string 		$server		- MySQL Host name 
+	 * @param 	string 		$username 	- MySQL User
+	 * @param 	string 		$password 	- MySQL Password
+	 * @param 	string 		$database 	- MySQL Database
+	 * @return	- singleton instance
+	 */
+	public static function getInstance($server = NULL, $username = NULL, $password = NULL, $database = NULL){
+		$md5 = md5(implode('|', array($server, $username, $password, $database)));
+		if (empty(self::$instance[$md5])) {
+			self::$instance[$md5] = new MySQL_wrapper($server, $username, $password, $database);  
+		}
+		return self::$instance[$md5];
+	}
+	
+	/** Protected constructor to prevent creating a new instance of the MySQL_wrapper via the `new` operator from outside of this class.
 	 * @param 	string 		$server		- MySQL Host name 
 	 * @param 	string 		$username 	- MySQL User
 	 * @param 	string 		$password 	- MySQL Password
 	 * @param 	string 		$database 	- MySQL Database
 	 */
-	function MySQL_wrapper($server = NULL, $username = NULL, $password = NULL, $database = NULL) {
+	protected function __construct($server = NULL, $username = NULL, $password = NULL, $database = NULL) {
 		$this->server = $server;
 		$this->username = $username;
 		$this->password = $password;
 		$this->database = $database;
 	}
 	
+	/** Private clone method to prevent cloning of the instance of the MySQL_wrapper instance.
+     * @return void
+     */
+    private function __clone() {
+		// ... void
+    }
+	
+    /** Private unserialize method to prevent unserializing of the MySQL_wrapper instance.
+     * @return void
+     */
+    private function __wakeup() {
+		// ... void
+    }
+	
 	/** Call function
 	 * @param 	string 		$func		- function name
 	 * @param 	string 		$params 	- MySQL User
 	 * @param 	return
 	 */
-	function call($func) {
+	public function call($func) {
 		// Functions without link parameter
 		$l = array('free_result', 'fetch_assoc', 'num_rows', 'num_fields');
 		// Add return value
@@ -203,7 +237,7 @@ class MySQL_wrapper {
 	 * @param 	boolean		$newLink	- New link
 	 * @return 	boolean 
 	 */
-	function connect($server = NULL, $username = NULL, $password = NULL, $database = NULL, $newLink = FALSE) {
+	public function connect($server = NULL, $username = NULL, $password = NULL, $database = NULL, $newLink = FALSE) {
 		if ($server !== NULL && $username !== NULL && $database !== NULL) {
 			$this->server = $server;
 			$this->username = $username;
@@ -237,7 +271,7 @@ class MySQL_wrapper {
 	 * @param 	string 		$charset 	- A valid charset name ( If not defined $this->charset whill be used)
 	 * @return	boolean
 	 */
-	function setCharset($charset = NULL) {
+	public function setCharset($charset = NULL) {
 		$this->charset = $charset ? $charset : $this->charset;
 		$this->call('set_charset', $this->charset) or $this->error("Error loading character set {$this->charset}");
 	}
@@ -246,7 +280,7 @@ class MySQL_wrapper {
 	 * @param 	void
 	 * @return 	boolean 
 	 */
-	function ping() {
+	public function ping() {
 		return $this->call('ping');
 	}
 	
@@ -254,7 +288,7 @@ class MySQL_wrapper {
 	 * @param 	void
 	 * @return 	boolean 
 	 */
-	function reconnect() {
+	public function reconnect() {
 		$this->close();
 		return $this->connect();
 	}
@@ -262,7 +296,7 @@ class MySQL_wrapper {
 	/** Close Connection on the server that's associated with the specified link (identifier).
 	 * @param 	void
 	 */
-	function close() {
+	public function close() {
 		$this->call('close') or $this->error("Connection close failed.");
 	}
 	
@@ -273,7 +307,7 @@ class MySQL_wrapper {
 	 * @param 	mixed 		- ...
 	 * @return 	resource or false
 	 */
-	function query($sql) {
+	public function query($sql) {
 		if (func_num_args() >= 2) {
 			$l = func_get_args();
 			unset($l[0]);
@@ -303,7 +337,7 @@ class MySQL_wrapper {
 	 * @param 	resource 	$query 		- MySQL Query Result
 	 * @return 	integer 	- Retrieves the number of fields from a query
 	 */
-	function numFields($query = 0) {
+	public function numFields($query = 0) {
 		return intval($this->call('num_fields', $query ? $query : $this->query));
 	}
 	
@@ -311,7 +345,7 @@ class MySQL_wrapper {
 	 * @param 	resource 	$query 		- MySQL Query Result
 	 * @return 	integer 	- Retrieves the number of rows from a result set
 	 */
-	function numRows($query = 0) {
+	public function numRows($query = 0) {
 		return intval($this->call('num_rows', $query ? $query : $this->query));
 	}
 	
@@ -319,7 +353,7 @@ class MySQL_wrapper {
 	 * @param 	resource 	$query 		- Result resource that is being evaluated ( Query Result )
 	 * @return 	bool
 	 */
-	function freeResult($query = 0) {
+	public function freeResult($query = 0) {
 		$this->call('free_result', $query ? $query : $this->query) or $this->error("Result could not be freed.");
 	}
 	
@@ -327,7 +361,7 @@ class MySQL_wrapper {
 	 * @param 	string 		$table 		- Table name
 	 * @return 	array 		$columns 	- Names of Fields
 	 */
-	function getColumns($table) {
+	public function getColumns($table) {
 		$q = $this->query("SHOW COLUMNS FROM `{$table}`;");
 		$columns = array();
 		while ($row = $this->fetchArray($q)) $columns[] = $row['Field'];
@@ -339,7 +373,7 @@ class MySQL_wrapper {
 	 * @param 	resource 	$query 		- MySQL Query Result
 	 * @return 	array or false
 	 */
-	function fetchArray($query = 0) {
+	public function fetchArray($query = 0) {
 		$this->query = $query ? $query : $this->query;
 		if ($this->query) {
 			return $this->call('fetch_assoc', $this->query);
@@ -354,7 +388,7 @@ class MySQL_wrapper {
 	 * @param 	string 		$fetchFirst	- Fetch only first row
 	 * @return 	array
 	 */
-	function fetchQueryToArray($sql, $fetchFirst = FALSE) {
+	public function fetchQueryToArray($sql, $fetchFirst = FALSE) {
 		if ($fetchFirst) {
 			$sql = rtrim(trim($sql), ';');
 			$sql = preg_replace($this->REGEX['LIMIT'], 'LIMIT 1;', $sql);
@@ -377,7 +411,7 @@ class MySQL_wrapper {
 	 * @param 	string 		$string - unescaped string
 	 * @return 	string
 	 */
-	function escape($string) {
+	public function escape($string) {
 		if (!version_compare(PHP_VERSION, '5.4.0') >= 0) {
 			$string = get_magic_quotes_gpc() ? stripslashes($string) : $string;
 		}
@@ -391,7 +425,7 @@ class MySQL_wrapper {
 	 * @param 	integer 	$limit 	- Limit offset
 	 * @return 	number of updated rows or false
 	 */
-	function arrayToUpdate($table, $data, $where = NULL, $limit = 0) {
+	public function arrayToUpdate($table, $data, $where = NULL, $limit = 0) {
 		if (is_array(reset($data))) {
 			$cols = array();
 			foreach (array_keys($data[0]) as $c) {
@@ -419,7 +453,7 @@ class MySQL_wrapper {
 	 * @param 	string 		$duplicateupdate 	- ON DUPLICATE KEY UPDATE (The ON DUPLICATE KEY UPDATE clause can contain multiple column assignments, separated by commas.)
 	 * @return 	insert id or false
 	 */
-	function arrayToInsert($table, $data, $ignore = FALSE, $duplicateupdate = NULL) {
+	public function arrayToInsert($table, $data, $ignore = FALSE, $duplicateupdate = NULL) {
 		$multirow = is_array(reset($data));
 		if ($multirow) {
 			$c = implode('`, `', array_keys($data[0]));
@@ -465,7 +499,7 @@ class MySQL_wrapper {
 	 * @param 	string 		$newLine		- New line delimiter (Default: auto detection use \n, \r\n ...)
 	 * @return 	number of inserted rows or false
 	 */
-	function importCSV2Table($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = FALSE) {
+	public function importCSV2Table($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = FALSE) {
 		$file = file_exists($file) ? realpath($file) : NULL;
 		$file = realpath($file);
 		if (!file_exists($file)) {
@@ -519,7 +553,7 @@ class MySQL_wrapper {
 	 * @param 	string 		$newLine		- New line delimiter (Default: auto detection use \n, \r\n ...)
 	 * @return 	number of inserted rows or false
 	 */
-	function importUpdateCSV2Table($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = FALSE) {		
+	public function importUpdateCSV2Table($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = FALSE) {		
 		$tmp_name = "{$table}_tmp_" . rand();
 		
 		// Create tmp table
@@ -594,7 +628,7 @@ class MySQL_wrapper {
 	 * @param 	boolean		$showColumns 	- Columns names in first line
 	 * @return 	- File path
 	 */
-	function exportTable2CSV($table, $file, $columns = '*', $where = NULL, $limit = 0, $delimiter = ',', $enclosure = '"', $escape = '\\', $newLine = '\n', $showColumns = TRUE) {
+	public function exportTable2CSV($table, $file, $columns = '*', $where = NULL, $limit = 0, $delimiter = ',', $enclosure = '"', $escape = '\\', $newLine = '\n', $showColumns = TRUE) {
 		$fh = fopen($file, 'w') or $this->error("ERROR", "Can't create CSV file: {$file}");
 		if (!$fh) {
 			return FALSE;
@@ -645,7 +679,7 @@ class MySQL_wrapper {
 	 * @param 	boolean		$showColumns 	- Columns names in first line
 	 * @return 	- File path
 	 */
-	function query2CSV($sql, $file, $delimiter = ',', $enclosure = '"', $escape = '\\', $newLine = '\n', $showColumns = TRUE) {
+	public function query2CSV($sql, $file, $delimiter = ',', $enclosure = '"', $escape = '\\', $newLine = '\n', $showColumns = TRUE) {
 		$fh = fopen($file, 'w') or $this->error("ERROR", "Can't create CSV file: {$file}");
 		if (!$fh) {
 			return FALSE;
@@ -693,7 +727,7 @@ class MySQL_wrapper {
 	 * @param 	string 		$newLine		- New line delimiter (Default: auto detection use \n, \r\n ...)
 	 * @return 	number of inserted rows or false
 	 */
-	function createTableFromCSV($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = FALSE) {
+	public function createTableFromCSV($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = FALSE) {
 		$file = file_exists($file) ? realpath($file) : NULL;
 		if ($file === NULL) {
 			$this->error('ERROR', "Create Table form CSV - File: {$file} doesn't exist.");
@@ -735,7 +769,7 @@ class MySQL_wrapper {
 	 * @param 	array 		$table 	- Names of the tables eg -> array('old_table' => 'new_table') or array('table1' => 'tmp_table', 'table2' => 'table1', 'tmp_table' => 'table1')
 	 * @return 	resource or false
 	 */
-	function renameTable($table) {
+	public function renameTable($table) {
 		$rename = array();
 		foreach ($table as $old => $new) {
 			$rename[] = "`{$old}` TO `{$new}`";
@@ -749,7 +783,7 @@ class MySQL_wrapper {
 	 * @param 	boolean		$data 		- Copy table data
 	 * @return 	resource or false
 	 */
-	function copyTable($table, $new_table, $data = TRUE) {
+	public function copyTable($table, $new_table, $data = TRUE) {
 		$r = $this->query("CREATE TABLE `{$new_table}` LIKE `{$table}`;");
 		return ($r && $data) ? $this->query("INSERT INTO `{$new_table}` SELECT * FROM `{$table}`;") : $r;
 	}
@@ -758,7 +792,7 @@ class MySQL_wrapper {
 	 * @param 	string 		$table 		- Table name
 	 * @return 	resource or false
 	 */
-	function truncateTable($table) {
+	public function truncateTable($table) {
 		return $this->query("TRUNCATE TABLE `" . $table . "`;"); 
 	}
 	
@@ -767,7 +801,7 @@ class MySQL_wrapper {
 	 * @param 	boolean		$if_exists	- Use IF EXISTS to prevent an error from occurring for tables that do not exist.
 	 * @return 	resource or false
 	 */
-	function dropTable($table, $if_exists = TRUE) {
+	public function dropTable($table, $if_exists = TRUE) {
 		return $this->query("DROP TABLE " . ($if_exists ? "IF EXISTS " : NULL) . "`" . (is_array($table) ? implode('`, `', $table) : $table) . "`;"); 
 	}
 	
@@ -777,7 +811,7 @@ class MySQL_wrapper {
 	 * @param 	integer	 	$round		- Round on decimals
 	 * @return 	- Size in B / KB / MB / GB / TB
 	 */
-	function getDataBaseSize($sizeIn = 'MB', $round = 2) {
+	public function getDataBaseSize($sizeIn = 'MB', $round = 2) {
 		$r = $this->query("SELECT ROUND( SUM( `data_length` + `index_length` ) " . str_repeat('/ 1024 ', array_search(strtoupper($sizeIn), array('B', 'KB', 'MB', 'GB', 'TB'))) . ", {$round} ) `size` FROM `information_schema`.`TABLES` WHERE `table_schema` LIKE '{$this->database}' GROUP BY `table_schema`;");
 		if ($r !== FALSE) {
 			$row = $this->fetchArray($r);
@@ -792,7 +826,7 @@ class MySQL_wrapper {
 	 * @param 	void
 	 * @return 	integer
 	 */
-	function insertID() {
+	public function insertID() {
 		return $this->call('insert_id');
 	}
 	
@@ -801,7 +835,7 @@ class MySQL_wrapper {
 	 * @param 	string 		$where 	- WHERE Clause
 	 * @return 	integer or false
 	 */
-	function countRows($table, $where = NULL) {
+	public function countRows($table, $where = NULL) {
 		$r = $this->query("SELECT COUNT( * ) AS count FROM `{$table}` " . ($where ? " WHERE {$where}" : NULL) . ";");
 		if ($r !== FALSE) {
 			$row = $this->fetchArray($r);
@@ -816,7 +850,7 @@ class MySQL_wrapper {
 	 * @param 	string 		$table 	- Table name
 	 * @return 	integer or false
 	 */
-	function nextAutoIncrement($table) {
+	public function nextAutoIncrement($table) {
 		$r = $this->query("SHOW TABLE STATUS LIKE '{$table}';");  
 		if ($r !== FALSE) {
 			$row = $this->fetchArray();  
@@ -833,14 +867,14 @@ class MySQL_wrapper {
 	 * @param 	integer 	$limit 	- Limit offset
 	 * @return 	number of deleted rows or false
 	 */
-	function deleteRow($table, $where = NULL, $limit = 0) {
+	public function deleteRow($table, $where = NULL, $limit = 0) {
 		return $this->query("DELETE FROM `{$table}`" . ($where ? " WHERE {$where}" : NULL) . ($limit ? " LIMIT {$limit}" : NULL) . ";") ? $this->affected : FALSE;
 	}
 	
 	/** Begin Transaction
 	 * @param 	void
 	 */
-	function begin() { 
+	public function begin() { 
 		$this->query("START TRANSACTION"); 
 		return $this->query("BEGIN"); 
 	}
@@ -854,7 +888,7 @@ class MySQL_wrapper {
 	 * @param 	integer 	$limit 	 - Limit offset
 	 * @return  integer 	- Affected rows
 	 */
-	function strReplace($table, $columns, $search, $replace, $where = NULL, $limit = 0) {
+	public function strReplace($table, $columns, $search, $replace, $where = NULL, $limit = 0) {
 		// Replace in whole DB
 		if ($table == '*') {
 			if (!is_array($columns)){
@@ -924,14 +958,14 @@ class MySQL_wrapper {
 	/** Commit
 	 * @param 	void
 	 */
-	function commit() { 
+	public function commit() { 
 		return $this->query("COMMIT"); 
 	} 
 	
 	/** Rollback
 	 * @param 	void
 	 */
-	function rollback() { 
+	public function rollback() { 
 		return $this->query("ROLLBACK"); 
 	} 
 	
@@ -939,7 +973,7 @@ class MySQL_wrapper {
 	 * @param 	array		$qarr	- Array with Queries
 	 * @link	http://dev.mysql.com/doc/refman/5.0/en/commit.html
 	 */
-	function transaction($qarr = array()) { 
+	public function transaction($qarr = array()) { 
 		$commit = TRUE;
 		$this->begin(); 
 		foreach ($qarr as $q) { 
@@ -958,7 +992,7 @@ class MySQL_wrapper {
 	/** Init table revision
 	 * @param 	string		$table	- Table name
 	 */
-	function initTableRevision($table) {
+	public function initTableRevision($table) {
 		// Revision table name
 		$rev_table = "{$table}_revision";
 		
@@ -1045,7 +1079,7 @@ class MySQL_wrapper {
 	 * @param	string 		$id_field	- Unique field name
 	 * @param	datetime	- Revision time
 	 */
-	function createTableFromRevisionTime($table, $rev_table, $id_field, $time) {
+	public function createTableFromRevisionTime($table, $rev_table, $id_field, $time) {
 		$time = strtotime($time);
 		$columns = $this->getColumns($rev_table);
 		
@@ -1072,7 +1106,7 @@ class MySQL_wrapper {
 	 * @param	string 		$id_field	- Unique field name
 	 * @param	datetime	- Revision time
 	 */
-	function restoreTableFromRevisionTime($table, $id_field, $time) {
+	public function restoreTableFromRevisionTime($table, $id_field, $time) {
 		$time = strtotime($time);
 		$columns = $this->getColumns($table);
 		$cols = array();
@@ -1114,7 +1148,7 @@ class MySQL_wrapper {
 	 * @param 	string		$msg	- Message
 	 * @param 	boolean 	$web 	- HTML (TRUE) or Plaint text
 	 */
-	function error($msg, $web = FALSE) {
+	private function error($msg, $web = FALSE) {
 		if ($this->displayError || $this->logErrors || $this->emailErrors) {
 			if ($this->link) {
 				$this->error = $this->call('error');
@@ -1157,7 +1191,7 @@ class MySQL_wrapper {
 	 * @param 	string		$type	- Log type
 	 * @param 	string	 	$log 	- Message
 	 */
-	function log($type, $log) {
+	private function log($type, $log) {
 		try {
 			$fh = fopen($this->logFilePath, 'a');
 			fwrite($fh, date($this->dateFormat) . " - {$type} -> {$log}" . PHP_EOL);
@@ -1171,7 +1205,7 @@ class MySQL_wrapper {
 	 * @param	void
 	 * @return	string 		- Backtrace
 	 */
-	function backtrace() {
+	private function backtrace() {
 		foreach (debug_backtrace() as $t) {
 			if ($t['file'] != __FILE__) {
 				return "Function {$t['function']} in {$t['file']} on line {$t['line']}";
@@ -1182,7 +1216,7 @@ class MySQL_wrapper {
 	/** Get Microtime
 	 * @return 	float 		- Current time
 	 */
-	function getMicrotime() {
+	private function getMicrotime() {
 		list($usec, $sec) = explode(" ", microtime());
 		return ((float) $usec + (float) $sec);
 	}
@@ -1191,7 +1225,7 @@ class MySQL_wrapper {
 	 * @param	string		- File path
 	 * @retrun	- EOL chr
 	 */
-	function detectEOL($file) {
+	private function detectEOL($file) {
 		$f = fopen($file, 'r');
 		$line = fgets($f);
 		fclose($f);

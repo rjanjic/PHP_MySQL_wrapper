@@ -3,11 +3,11 @@
 
 	PHP MySQL Wrapper Exmaples
 	
-	PHP version required (PHP 4 >= 4.3.0, PHP 5)
+	PHP version required (PHP 5)
 	
 */
 
-include "MySQL_wrapper.class.php";
+require "MySQL_wrapper.class.php";
 
 
 // set your connectivity settings here
@@ -16,11 +16,13 @@ define('MySQL_USER', 'root');
 define('MySQL_PASS', '');
 define('MySQL_DB', 'test');
 
-// create test table
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
-$db->connect(); 
 /*
-// test table sql for examples
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect
+$db->connect(); 
+
+// Test table sql for examples
 $db->query("CREATE TABLE IF NOT EXISTS `table` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `firstname` varchar(250) NOT NULL,
@@ -44,6 +46,9 @@ $db->query("INSERT INTO `table` (`id`, `firstname`, `surname`, `email`, `date`) 
 (8, 'Radovan', 'Janjic', 'rade@it-radionica.com', '2012-11-04'),
 (9, 'Radovan', 'Janjic', 'rade@it-radionica.com', '2012-11-04'),
 (10, 'Radovan', 'Janjic', 'rade@it-radionica.com', '2012-11-04');");
+
+// Close connection
+$db->close();
 */
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -51,10 +56,15 @@ $db->query("INSERT INTO `table` (`id`, `firstname`, `surname`, `email`, `date`) 
 // Example 1
 // Connection example
 ///////////////////////////////////////////////////////////////////////////////////////////
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect
 $db->connect(); 
+
+//
+// ... do queries
+//
+
 // Close connection
 $db->close();
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -62,7 +72,7 @@ $db->close();
 // Example 2
 // Connection example
 ///////////////////////////////////////////////////////////////////////////////////////////
-$db = new MySQL_wrapper;
+$db = MySQL_wrapper::getInstance();
 
 // connect 1
 $db->connect(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB); // You can use connection info here as well 
@@ -92,16 +102,25 @@ $db->close();
 // Connection example multi host, db manipulation
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-$db1 = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
-$db2 = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+// Host 1 instance
+$db1 = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Host 2 instance (MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB) -> use another connection info
+$db2 = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect host 1
 $db1->connect();
+
 // Connect host 2
 $db2->connect();
 
+//
+// ... do queries of cennection 1 or connection 2
+//
+
 // Close connection host 1
 $db1->close();
+
 // Close connection host 2
 $db2->close();
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -109,7 +128,7 @@ $db2->close();
 // Example 4
 // Select example with fetch result
 ///////////////////////////////////////////////////////////////////////////////////////////
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 $db->connect();
 
 // MySQL query
@@ -159,7 +178,7 @@ $db->close();
 // Example 5
 // Prepared statements (works only with MySQLi!) 
 ///////////////////////////////////////////////////////////////////////////////////////////
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect
 $db->connect();
@@ -185,7 +204,7 @@ $db->close();
 // Example 5
 // Faster select exmaple (fetch query to array)
 ///////////////////////////////////////////////////////////////////////////////////////////
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 $db->connect();
 echo "<hr /><strong>Example 5 (fetch query to array)</strong><pre>";
 print_r($db->fetchQueryToArray('SELECT * FROM `table`'));
@@ -199,7 +218,7 @@ $db->close();
 // Exmaple 6
 // Multi results
 ///////////////////////////////////////////////////////////////////////////////////////////
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 $db->connect();
 
 // Result 1
@@ -234,7 +253,7 @@ $db->close();
 // Example 7
 // Rows, Cols num
 ///////////////////////////////////////////////////////////////////////////////////////////
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 $db->connect();
 
 $db->query('SELECT * FROM `table`');
@@ -252,7 +271,7 @@ $db->close();
 // Example 8
 // Count rows
 ///////////////////////////////////////////////////////////////////////////////////////////
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 $db->connect();
 
 // Count all
@@ -275,7 +294,7 @@ $db->close();
 // Example 9
 // Array to insert
 ///////////////////////////////////////////////////////////////////////////////////////////
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 $db->connect();
 
 // Array data
@@ -325,7 +344,7 @@ $db->close();
 // Example 10
 // Next AutoIncrement
 ///////////////////////////////////////////////////////////////////////////////////////////
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 $db->connect();
 
 // Returns next auto increment value
@@ -339,7 +358,7 @@ $db->close();
 // Example 11
 // Array to update
 ///////////////////////////////////////////////////////////////////////////////////////////
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 $db->connect();
 
 // Array data
@@ -392,7 +411,7 @@ $db->close();
 // Example 12
 // Delete row
 ///////////////////////////////////////////////////////////////////////////////////////////
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 $db->connect();
 
 $db->deleteRow('table', "`id` = {$insert_id}");
@@ -414,7 +433,7 @@ $db->close();
 // Example 13
 // Get table columns
 ///////////////////////////////////////////////////////////////////////////////////////////
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 // Connect
 $db->connect();
 echo "<hr /><strong>Example 13 (get table columns)</strong><br />Table columns are:<br />";
@@ -426,7 +445,7 @@ $db->close();
 // Example 14
 // Basic Table Operation
 ///////////////////////////////////////////////////////////////////////////////////////////
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 // Connect
 $db->connect();
 
@@ -461,7 +480,7 @@ $db->close();
 // Example 15
 // Get database size
 ///////////////////////////////////////////////////////////////////////////////////////////
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect
 $db->connect();
@@ -480,7 +499,7 @@ $db->close();
 // Example 16
 // Loging queries and errors
 ///////////////////////////////////////////////////////////////////////////////////////////
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 $db->connect();
 $db->logQueries = TRUE; // Default is FALSE, use TRUE only for debuging
 $db->logErrors = TRUE; // This is useful to be TRUE!
@@ -499,7 +518,7 @@ $db->close();
 // Example 17
 // Export Table to CSV
 ///////////////////////////////////////////////////////////////////////////////////////////
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 // Connect
 $db->connect();
 // Export all data
@@ -532,7 +551,7 @@ $db->close();
 // Example 18
 // Query to CSV
 ///////////////////////////////////////////////////////////////////////////////////////////
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect
 $db->connect();
@@ -559,7 +578,7 @@ $db->close();
 // Example 19
 // Import CSV to Table
 ///////////////////////////////////////////////////////////////////////////////////////////
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 // Connect
 $db->connect();
 // Import all data
@@ -585,7 +604,7 @@ $db->close();
 // Example 20
 // Create table from CSV file
 ///////////////////////////////////////////////////////////////////////////////////////////
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 $db->connect(); 
 
 $db->dropTable('csv_to_table_test');
@@ -614,7 +633,7 @@ $db->close();
 // Example 21
 // Import CSV to Table
 ///////////////////////////////////////////////////////////////////////////////////////////
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 // Connect
 $db->connect();
 
@@ -644,7 +663,7 @@ $db->close();
 // Example 22
 // Transactions
 ///////////////////////////////////////////////////////////////////////////////////////////
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 // Connect
 $db->connect();
 $queries = array();
@@ -666,7 +685,7 @@ $db->close();
 // Example 23
 // String Search and Replace in all or defined Table Columns
 ///////////////////////////////////////////////////////////////////////////////////////////
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 // Connect
 $db->connect();
 // Simple
@@ -699,7 +718,7 @@ $db->close();
 // Example 24
 // E-mail on error / die on error
 ///////////////////////////////////////////////////////////////////////////////////////////
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect
 $db->connect(); 

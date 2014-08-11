@@ -32,10 +32,14 @@ define('MySQL_DB', 'test');
 
 *Connect to a given MySQL server*
 ```php
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect
 $db->connect(); 
+
+//
+// ... do queries
+//
 
 // Close connection
 $db->close();
@@ -43,7 +47,7 @@ $db->close();
 
 *Connection example*
 ```php
-$db = new MySQL_wrapper;
+$db = MySQL_wrapper::getInstance();
 
 // Connect 1
 $db->connect(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
@@ -79,16 +83,20 @@ $db->close();
 *Connection example multi host, db manipulation*
 ```php
 // Inst. 1
-$db1 = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db1 = MySQL_wrapper::getInstance('host1', MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Inst. 2
-$db2 = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db2 = MySQL_wrapper::getInstance('host2', MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect host 1
 $db1->connect();
 
 // Connect host 2
 $db2->connect();
+
+//
+// ... do queries of cennection 1 or connection 2
+//
 
 // Close connection host 1
 $db1->close();
@@ -99,7 +107,7 @@ $db2->close();
 
 *Select example with fetch result*
 ```php
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect to host
 $db->connect();
@@ -157,7 +165,7 @@ $db->close();
 
 *Prepared statements (works only with MySQLi!)*
 ```php
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Works only with MySQLi!
 $db->extension = 'mysqli';
@@ -185,7 +193,7 @@ $db->close();
 
 *Prepared statements (works only with MySQLi!) - if mysqlnd driver is not installed*
 ```php
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect
 $db->connect();
@@ -214,7 +222,7 @@ $db->close();
 
 *Fetch query to array*
 ```php
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect
 $db->connect();
@@ -237,7 +245,7 @@ $db->close();
 
 *Multi results*
 ```php
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect to host
 $db->connect();
@@ -276,7 +284,7 @@ $db->close();
 
 *Rows, Cols num*
 ```php
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect to host
 $db->connect();
@@ -299,7 +307,7 @@ $db->close();
 
 *Count rows*
 ```php
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect to host
 $db->connect();
@@ -327,7 +335,7 @@ $db->close();
 
 *Array to insert*
 ```php
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect to host
 $db->connect();
@@ -379,7 +387,7 @@ $db->close();
 ```
 *Next AutoIncrement*
 ```php
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect to host
 $db->connect();
@@ -395,7 +403,7 @@ $db->close();
 
 *Array to update*
 ```php
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect to host
 $db->connect();
@@ -453,7 +461,7 @@ $db->close();
 
 *Delete row(s)*
 ```php
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect to host
 $db->connect();
@@ -480,7 +488,7 @@ $db->close();
 
 *Get table columns*
 ```php
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect
 $db->connect();
@@ -496,7 +504,7 @@ $db->close();
 
 *Basic Table Operation*
 ```php
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect to host
 $db->connect();
@@ -531,7 +539,7 @@ $db->close();
 
 *Get database size*
 ```php
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect
 $db->connect();
@@ -552,7 +560,7 @@ $db->close();
 
 *Loging queries and errors*
 ```php
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect to host
 $db->connect();
@@ -584,7 +592,7 @@ $db->close();
 
 *Export Table to CSV*
 ```php
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect
 $db->connect();
@@ -623,7 +631,7 @@ $db->close();
 
 *Query to CSV*
 ```php
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect
 $db->connect();
@@ -652,7 +660,7 @@ $db->close();
 
 *Import CSV to Table*
 ```php
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect
 $db->connect();
@@ -681,7 +689,7 @@ $db->close();
 
 *Create table from CSV file*
 ```php
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect to host
 $db->connect(); 
@@ -712,7 +720,7 @@ $db->close();
 
 *Import and update CSV to Table*
 ```php
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect
 $db->connect();
@@ -743,7 +751,7 @@ $db->close();
 
 *Transactions*
 ```php
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect
 $db->connect();
@@ -771,7 +779,7 @@ $db->close();
 
 *String Search and Replace in all or defined Table Columns*
 ```php
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect
 $db->connect();
@@ -812,7 +820,7 @@ $db->close();
 
 *E-mail on error / die on error*
 ```php
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect
 $db->connect(); 
@@ -839,7 +847,7 @@ $db->close();
 *Table revision*
 ```php
 
-$db = new MySQL_wrapper(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
 // Connect
 $db->connect();
