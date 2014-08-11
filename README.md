@@ -105,6 +105,36 @@ $db1->close();
 $db2->close();
 ```
 
+### Set the connection character set encoding
+
+#### Example 1
+```php
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect
+$db->connect(); 
+
+// Set charset
+$db->charset = 'utf8';;
+
+// Close connection
+$db->close();
+```
+
+#### Example 2
+```php
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect
+$db->connect(); 
+
+// Set charset
+$db->setCharset('utf8');
+
+// Close connection
+$db->close();
+```
+
 ### Select example with fetch result
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
