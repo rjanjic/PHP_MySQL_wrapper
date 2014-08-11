@@ -191,7 +191,7 @@ class MySQL_wrapper {
 		// ... void
 	}
 	
-    /** Private unserialize method to prevent unserializing of the MySQL_wrapper instance.
+	/** Private unserialize method to prevent unserializing of the MySQL_wrapper instance.
 	 * @return void
 	 */
 	private function __wakeup() {
