@@ -39,7 +39,7 @@ class MySQL_wrapper {
 	/** Store the single instance
 	 * @var array
 	 */
-    private static $instance = array();
+	private static $instance = array();
 	
 	/** MySQL Host name  
 	 * @var string
