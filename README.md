@@ -4,25 +4,35 @@ PHP_MySQL_wrapper
 This class implements a generic MySQL database access wrapper. 
 It can: 
 * [Connect to a given MySQL server](#connect-to-a-given-mysql-server)
+ * [Connection examples](#connection-examples)
+ * [Connection example multi host, db manipulation](#connection-example-multi-host-db-manipulation)
 * [Set the connection character set encoding](#set-the-connection-character-set-encoding)
 * Execute arbitrary queries and return the results in arrays
-* Retrieve the columns of a table
 * Execute UPDATE or INSERT queries from parameters that define the tables, fields, field values and conditions
-* Multiple INSERT / UPDATE
-* Count the number of rows of a table that match a given condition
-* Get the next value of an auto-incremented table field
-* Delete table rows that match a given condition
-* Export / Import table to/from CSV files
-* Create table from CSV file
-* Export query to SCV file
-* Do str_replace in given table for defined columns
-* Table operations
- * Rename 
- * Copy 
- * Truncate 
- * Drop table
-* Get database size
-* Log queries / errors
+ * Array to insert
+ * Array to update
+ * Multiple INSERT / UPDATE
+* [Count the number of rows of a table that match a given condition](#count-rows)
+* [Delete table rows that match a given condition](#delete-rows)
+* Operations with CSV files
+ * [Export table to CSV](#export-table-to-csv)
+ * [Export query to CSV](#export-query-to-csv)
+ * [Import CSV to Table](#import-csv-to-table)
+ * [Import and update CSV to Table](#import-and-update-csv-to-table)
+ * [Create table from CSV file](#create-table-from-csv-file)
+* Do str_replace in given database, table or defined columns in table
+* [Basic table operations](#basic-table-operation)
+ * [Copy table (with data included)](#basic-table-operation)
+ * [Copy table structure](#basic-table-operation)
+ * [Rename table](#basic-table-operation)
+ * [Swap table names](#basic-table-operation)
+ * [Truncate table (empty)](#basic-table-operation)
+ * [Drop one table](#basic-table-operation)
+ * [Drop multiple tables](#basic-table-operation)
+ * [Get table columns](#get-table-columns)
+ * [Get database size](#get-database-size)
+ * [Get the next value of an auto-incremented table field](#next-autoincrement)
+* [Log queries / errors](#loging-queries-and-errors)
 * Errors backtrace
 
 ### Connectivity settings
