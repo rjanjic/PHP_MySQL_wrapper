@@ -15,7 +15,7 @@ This class implements a generic MySQL database access wrapper.
  * [Multi results](#multi-results)
  * [Rows, Cols num](#rows-cols-num)
  * [Count rows](#count-rows)
-* Execute UPDATE or INSERT queries from parameters that define the tables, fields, field values and conditions
+* [Execute UPDATE or INSERT queries from parameters that define the tables, fields, field values and conditions](#execute-update-or-insert-queries-from-parameters-that-define-the-tables-fields-field-values-and-conditions)
  * [Array to insert](#array-to-insert)
  * [Multiple array to insert](#array-to-insert-multirow)
  * [Array to update](#array-to-update)
@@ -41,8 +41,11 @@ This class implements a generic MySQL database access wrapper.
  * [Get database size](#get-database-size)
  * [Get the next value of an auto-incremented table field](#next-autoincrement)
  * [Table revision](#table-revision)
-* [Log queries / errors](#loging-queries-and-errors)
-* Errors backtrace
+* [Logging / debug](#loging---debug)
+ * [Logging errors](#logging-errors)
+ * [Logging queries](#logging-queries)
+ * [E-mail on error / die on error](#e-mail-on-error---die-on-error)
+ * [Errors backtrace and debug](#errors-backtrace-and-debug)
 
 ### Connectivity settings
 ```php
@@ -568,162 +571,6 @@ if($db->affected > 0) {
 $db->close();
 ```
 
-### Get table columns
-```php
-$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
-
-// Connect
-$db->connect();
-
-// Get table columns into array
-$array = $db->getColumns('table');
-
-print_r($array);
-
-// Close connection
-$db->close();
-```
-
-### Basic Table Operation
-```php
-$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
-
-// Connect to host
-$db->connect();
-
-// Copy table (with data included)
-$db->copyTable('table', 'table_copy');
-
-// Copy table (with data included)
-$db->copyTable('table', 'table_copy4');
-
-// Copy table structure
-$db->copyTable('table', 'table_copy2', FALSE);
-
-// Rename table
-$db->renameTable(array('table_copy' => 'table_copy3'));
-
-// Swap table names
-$db->renameTable(array('table_copy3' => 'tmp_table', 'table_copy2' => 'table_copy3', 'tmp_table' => 'table_copy3'));
-
-// Truncate table (empty)
-$db->truncateTable('table_copy2');
-
-// Drop one table
-$db->dropTable('table_copy4');
-
-// Drop multiple tables
-$db->dropTable(array('table_copy3', 'table_copy2'));
-
-// Close connection
-$db->close();
-```
-
-#### Get database size
-```php
-$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
-
-// Connect
-$db->connect();
-
-/** Data Base size in B / KB / MB / GB / TB
- * @param 	string	 	$sizeIn		- Size in B / KB / MB / GB / TB
- * @param 	integer	 	$round		- Round on decimals
- * @param 	resource 	$link 		- Link identifier
- * @return 	- Size in B / KB / MB / GB / TB
- */
-// function getDataBaseSize($sizeIn = 'MB', $round = 2, $link = 0);
-
-echo 'Database size is: ', $db->getDataBaseSize('mb', 2), ' MB';
-
-// Close connection
-$db->close();
-```
-#### Next AutoIncrement
-```php
-$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
-
-// Connect to host
-$db->connect();
-
-// Returns next auto increment value
-$auto_increment = $db->nextAutoIncrement('table');
-
-echo "Next auto increment id is: {$auto_increment}";
-
-// Close connection
-$db->close();
-```
-
-#### Table revision
-```php
-
-$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
-
-// Connect
-$db->connect();
-
-// Init table revision (do this only once!)
-$db->initTableRevision('rev-table');
-
-// Time to restore to ... 
-$time = '2014-06-25 14:26:03';
-
-/** Create table from current revision time
- * @param 	string		$table		- New table name
- * @param	string 		$rev_table	- Revision table (origin table)
- * @param	string 		$id_field	- Unique field name
- * @param	datetime	- Revision time
- */
-// $db->createTableFromRevisionTime($table, $rev_table, $id_field, $time);
-		
-$db->createTableFromRevisionTime('rev-table' . '-' . $time, 'rev-table', 'id', $time);
-
-/** Restore table from current revision time
- * @param 	string		$table		- New table name
- * @param	string 		$id_field	- Unique field name
- * @param	datetime	- Revision time
- */
-//$db->restoreTableFromRevisionTime($table, $id_field, $time);
-
-$db->restoreTableFromRevisionTime('rev-table', 'id', $time);
-
-// Close connection
-$db->close();
-```
-
-### Loging queries and errors
-```php
-$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
-
-// Connect to host
-$db->connect();
-
-// Default is FALSE, use TRUE only for debuging
-$db->logQueries = TRUE;
-
-// This is useful to be TRUE!
-$db->logErrors = TRUE;
-
-// Default is FALSE, use TRUE only for debuging (security reasons!)
-$db->displayError = TRUE;
-
-// Date / Time format for log
-$db->dateFormat	= "Y-m-d H:i:s"; 
-
-// Log file
-$db->logFilePath = 'log-mysql.txt';
-
-// Query for this function will be logged
-$db->getColumns('table');
-
-// This query has error
-$db->query('SELECT * FROM `table` asfd!@#$');
-
-// Close connection
-$db->close();
-```
-
 ### Operations with CSV files
 
 #### Export Table to CSV
@@ -938,6 +785,9 @@ $db->strReplace('table', 'firstname, surname', 'search', 'replace');
 // You can set all columns in table as well
 $db->strReplace('table', '*', 'search', 'replace');
 
+// Whole database
+$db->strReplace('*', '*', 'search', 'replace');
+
 // More options
 /** Replace all occurrences of the search string with the replacement string in MySQL Table Column(s).
  * @param 	string		$table 	 - Table name
@@ -954,7 +804,184 @@ $db->strReplace('table', '*', 'search', 'replace');
 $db->close();
 ```
 
-### E-mail on error / die on error
+### Basic Table Operation
+```php
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect to host
+$db->connect();
+
+// Copy table (with data included)
+$db->copyTable('table', 'table_copy');
+
+// Copy table (with data included)
+$db->copyTable('table', 'table_copy4');
+
+// Copy table structure
+$db->copyTable('table', 'table_copy2', FALSE);
+
+// Rename table
+$db->renameTable(array('table_copy' => 'table_copy3'));
+
+// Swap table names
+$db->renameTable(array('table_copy3' => 'tmp_table', 'table_copy2' => 'table_copy3', 'tmp_table' => 'table_copy3'));
+
+// Truncate table (empty)
+$db->truncateTable('table_copy2');
+
+// Drop one table
+$db->dropTable('table_copy4');
+
+// Drop multiple tables
+$db->dropTable(array('table_copy3', 'table_copy2'));
+
+// Close connection
+$db->close();
+```
+
+#### Get table columns
+```php
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect
+$db->connect();
+
+// Get table columns into array
+$array = $db->getColumns('table');
+
+print_r($array);
+
+// Close connection
+$db->close();
+```
+
+#### Get database size
+```php
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect
+$db->connect();
+
+/** Data Base size in B / KB / MB / GB / TB
+ * @param 	string	 	$sizeIn		- Size in B / KB / MB / GB / TB
+ * @param 	integer	 	$round		- Round on decimals
+ * @param 	resource 	$link 		- Link identifier
+ * @return 	- Size in B / KB / MB / GB / TB
+ */
+// function getDataBaseSize($sizeIn = 'MB', $round = 2, $link = 0);
+
+echo 'Database size is: ', $db->getDataBaseSize('mb', 2), ' MB';
+
+// Close connection
+$db->close();
+```
+
+#### Next AutoIncrement
+```php
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect to host
+$db->connect();
+
+// Returns next auto increment value
+$auto_increment = $db->nextAutoIncrement('table');
+
+echo "Next auto increment id is: {$auto_increment}";
+
+// Close connection
+$db->close();
+```
+
+#### Table revision
+```php
+
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect
+$db->connect();
+
+// Init table revision (do this only once!)
+$db->initTableRevision('rev-table');
+
+// Time to restore to ... 
+$time = '2014-06-25 14:26:03';
+
+/** Create table from current revision time
+ * @param 	string		$table		- New table name
+ * @param	string 		$rev_table	- Revision table (origin table)
+ * @param	string 		$id_field	- Unique field name
+ * @param	datetime	- Revision time
+ */
+// $db->createTableFromRevisionTime($table, $rev_table, $id_field, $time);
+		
+$db->createTableFromRevisionTime('rev-table' . '-' . $time, 'rev-table', 'id', $time);
+
+/** Restore table from current revision time
+ * @param 	string		$table		- New table name
+ * @param	string 		$id_field	- Unique field name
+ * @param	datetime	- Revision time
+ */
+//$db->restoreTableFromRevisionTime($table, $id_field, $time);
+
+$db->restoreTableFromRevisionTime('rev-table', 'id', $time);
+
+// Close connection
+$db->close();
+```
+
+### Logging / debug
+
+#### Logging errors
+```php
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect to host
+$db->connect();
+
+// This is useful to be TRUE!
+$db->logErrors = TRUE;
+
+// Default is FALSE, use TRUE only for debuging (security reasons!)
+$db->displayError = TRUE;
+
+// Date / Time format for log
+$db->dateFormat	= "Y-m-d H:i:s"; 
+
+// Log file
+$db->logFilePath = 'log-mysql.txt';
+
+// This query has error
+$db->query('SELECT * FROM `table` asfd!@#$');
+
+// Close connection
+$db->close();
+```
+
+#### Logging queries
+```php
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect to host
+$db->connect();
+
+// Default is FALSE, use TRUE only for debuging
+$db->logQueries = TRUE;
+
+// Log file
+$db->logFilePath = 'log-mysql.txt';
+
+// Query for this function will be logged
+$db->getColumns('table');
+
+// Query will be logged as well ...
+$db->query('SELECT * FROM `table`;');
+
+// Close connection
+$db->close();
+```
+
+
+#### E-mail on error / die on error
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -980,4 +1007,30 @@ $db->query("select * from asdf2");
 $db->close();
 ```
 
+#### Errors backtrace and debug
 
+```php
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect to host
+$db->connect();
+
+// Default is FALSE, use TRUE only for debuging (security reasons!)
+$db->displayError = TRUE;
+
+// This query has error
+$db->query('SELECT * FROM `table` asfd!@#$');
+
+// Close connection
+$db->close();
+
+```
+
+Display error example:
+
+```
+Query fail: SELECT * FROM `table` asfd!@#$
+- Error No: 1064
+- Error: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '!@#$' at line 1
+- Call: Function query in C:\xampp\htdocs\Git\PHP_MySQL_wrapper\test.php on line 29
+```
