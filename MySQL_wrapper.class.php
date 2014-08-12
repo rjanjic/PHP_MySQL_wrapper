@@ -205,7 +205,7 @@ class MySQL_wrapper {
 	 */
 	public function call($func) {
 		// Functions without link parameter
-		$l = array('free_result', 'fetch_assoc', 'num_rows', 'num_fields');
+		$l = array('free_result', 'fetch_assoc', 'num_rows', 'num_fields', 'fetch_object', 'fetch_field_direct');
 		// Add return value
 		$r = array('free_result' => TRUE);
 		// Params
@@ -638,7 +638,7 @@ class MySQL_wrapper {
 		unlink($file);
 		
 		// Put columns into array if not *
-		if($columns != '*' && !is_array($columns)){
+		if ($columns != '*' && !is_array($columns)) {
 			$stringColumns = $columns;
 			$columns = array();
 			foreach (explode(',', $stringColumns) as $c) {
@@ -649,7 +649,7 @@ class MySQL_wrapper {
 		// Prepare SQL for column names
 		if ($showColumns) {
 			$tableColumnsArr = array();
-			if ($columns == '*'){
+			if ($columns == '*') {
 				foreach ($this->getColumns($table) as $c)
 					$tableColumnsArr[] = "'{$c}' AS `{$c}`";
 			} elseif (is_array($columns)) {
@@ -869,6 +869,77 @@ class MySQL_wrapper {
 	 */
 	public function deleteRow($table, $where = NULL, $limit = 0) {
 		return $this->query("DELETE FROM `{$table}`" . ($where ? " WHERE {$where}" : NULL) . ($limit ? " LIMIT {$limit}" : NULL) . ";") ? $this->affected : FALSE;
+	}
+	
+	/** Export query to XML file or return as XML string
+	 * @param	string		$query				- mysql query
+	 * @param	string		$rootElementName	- root element name
+	 * @param	string		$childElementName	- child element name
+	 * @return	string		- XML
+	 */
+	public function query2XML($query, $rootElementName, $childElementName, $file = NULL) {
+		// Save to file
+		if (!empty($file)) {
+			$fh = fopen($file, 'w') or $this->error("ERROR", "Can't create XML file: {$file}");
+			if (!$fh) {
+				return FALSE;
+			}
+			fclose($fh);
+			$file = realpath($file);
+			$saveToFile = TRUE;
+		} else {
+			$saveToFile = FALSE;
+		}
+		
+		// Do query
+		$r = $this->query($query);
+		
+		// XML header
+		if ($saveToFile) {
+			file_put_contents($file, "<?xml version=\"1.0\" encoding=\"" . strtoupper($this->charset) . "\" ?>\n<" . $rootElementName . ">\n", LOCK_EX);
+		} else {
+			$xml = "<?xml version=\"1.0\" encoding=\"" . strtoupper($this->charset) . "\" ?>\n";
+			$xml .= "<" . $rootElementName . ">\n";
+		}
+		
+		// Query rows
+		while($row = $this->call('fetch_object', $r)) {
+			// Create the first child element
+			$record = "\t<" . $childElementName . ">\n";
+			for ($i = 0; $i < $this->call('num_fields', $r); $i++) {
+				// Different methods of getting field name for mysql and mysqli
+				if ($this->extension == 'mysql') {
+					$fieldName = $this->call('field_name', $r, $i);
+				} elseif ($this->extension == 'mysqli') {
+					$colObj = $this->call('fetch_field_direct', $r, $i);                            
+					$fieldName = $colObj->name;
+				}
+				// The child will take the name of the result column name
+				$record .= "\t\t<" . $fieldName . ">";
+				// Set empty columns with NULL and escape XML entities
+				if(!empty($row->$fieldName)) {
+					$record .= htmlspecialchars($row->$fieldName, ENT_XML1);
+				} else {
+					$record .= NULL; 
+				}
+				$record .= "</" . $fieldName . ">\n";
+			}
+			$record .= "\t</" . $childElementName . ">\n";
+			if ($saveToFile) {
+				file_put_contents($file, $record, FILE_APPEND | LOCK_EX);
+			} else {
+				$xml .= $record;
+			}
+		}
+		
+		// Output
+		if ($saveToFile) {
+			file_put_contents($file, "</" . $rootElementName . ">\n", FILE_APPEND | LOCK_EX);
+			return TRUE;
+		} else {
+			$xml .= "</" . $rootElementName . ">\n";
+			return $xml; 
+		}
 	}
 	
 	/** Begin Transaction
