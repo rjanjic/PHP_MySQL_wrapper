@@ -409,25 +409,6 @@ $data['date'] = 'now()';
 $insert_id = $db->arrayToInsert('table', $data);
 echo "Last insert id is: {$insert_id}";
 
-// Array data
-// [fealdname] = feald value
-$data = array();
-$data['firstname'] = 'Radovan';
-$data['surname'] = 'Janjic';
-$data['email'] = 'rade@it-radionica.com';
-$data['date'] = 'now()';
-
-// [fealdname] = feald value
-$data2 = array();
-$data2['firstname'] = 'Radovan';
-$data2['surname'] = 'Janjic';
-$data2['email'] = 'rade@it-radionica.com';
-$data2['date'] = 'now()';
-
-// $db->arrayToInsert( ... ) multirow returns TRUE on success
-$db->arrayToInsert('table', array($data, $data2 /*, $data3 .... */ ));
-
-
 // More options
 /** Creates an sql string from an associate array
  * @param 	string 		$table 	- Table name
@@ -436,7 +417,7 @@ $db->arrayToInsert('table', array($data, $data2 /*, $data3 .... */ ));
  * @param 	string 		$duplicateupdate 	- ON DUPLICATE KEY UPDATE (The ON DUPLICATE KEY UPDATE clause can contain multiple column assignments, separated by commas.)
  * @return 	insert id or false
  */
-// $db->arrayToInsert($table, $data, $ignore = FALSE, $duplicateupdate = NULL)
+// $db->arrayToInsert($table, $data, $ignore = FALSE, $duplicateupdate = NULL);
 
 // Close connection
 $db->close();
@@ -500,26 +481,6 @@ $db->arrayToUpdate('table', $data, "`id` = {$insert_id}");
 if($db->affected > 0){
 	echo "Updated: {$db->affected} row(s).";
 }
-
-// Array data
-// [fealdname] = feald value
-$data = array();
-$data['id'] = 1; // key
-$data['firstname'] = 'foo';
-$data['surname'] = 'bar';
-$data['email'] = 'rade@it-radionica.com';
-$data['date'] = 'now()';
-
-// [fealdname] = feald value
-$data2 = array();
-$data2['id'] = 2; // key 
-$data2['firstname'] = 'Radovana';
-$data2['surname'] = 'Janjic';
-$data2['email'] = 'rade@it-radionica.com';
-$data2['date'] = 'now()';
-
-// $db->arrayToUpdate( ... ) multirow returns TRUE on success
-$db->arrayToUpdate('table', array($data, $data2 /*, $data3 .... */ ));
 
 // More options
 /** Creates an sql string from an associate array
