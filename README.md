@@ -41,10 +41,10 @@ This class implements a generic MySQL database access wrapper.
  * [Get database size](#get-database-size)
  * [Get the next value of an auto-incremented table field](#next-autoincrement)
  * [Table revision](#table-revision)
-* [Logging / debug](#loging---debug)
+* [Logging / debug](#loging--debug)
  * [Logging errors](#logging-errors)
  * [Logging queries](#logging-queries)
- * [E-mail on error / die on error](#e-mail-on-error---die-on-error)
+ * [E-mail on error / die on error](#e-mail-on-error--die-on-error)
  * [Errors backtrace and debug](#errors-backtrace-and-debug)
 
 ### Connectivity settings
