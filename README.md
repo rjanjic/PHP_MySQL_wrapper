@@ -2,25 +2,33 @@ PHP_MySQL_wrapper
 =================
 
 This class implements a generic MySQL database access wrapper. 
-It can: 
+
 * [Connect to a given MySQL server](#connect-to-a-given-mysql-server)
  * [Connection examples](#connection-examples)
  * [Connection example multi host, db manipulation](#connection-example-multi-host-db-manipulation)
 * [Set the connection character set encoding](#set-the-connection-character-set-encoding)
-* Execute arbitrary queries and return the results in arrays
+* [Execute arbitrary queries and return the results in arrays](#execute-arbitrary-queries-and-return-the-results-in-arrays)
+ * [Select example with fetch result](#select-example-with-fetch-result)
+ * [Prepared statements](#prepared-statements-works-only-with-mysqli)
+ * [Prepared statements - mysqlnd driver not installed](#prepared-statements-works-only-with-mysqli---if-mysqlnd-driver-is-not-installed)
+ * [Fetch query to array](#fetch-query-to-array)
+ * [Multi results](#multi-results)
+ * [Rows, Cols num](#rows-cols-num)
+ * [Count rows](#count-rows)
 * Execute UPDATE or INSERT queries from parameters that define the tables, fields, field values and conditions
- * Array to insert
- * Array to update
- * Multiple INSERT / UPDATE
+ * [Array to insert](#array-to-insert)
+ * [Multiple array to insert](#array-to-insert)
+ * [Array to update](#array-to-update)
+ * [Multiple array to update](#array-to-update)
 * [Count the number of rows of a table that match a given condition](#count-rows)
 * [Delete table rows that match a given condition](#delete-rows)
-* Operations with CSV files
+* [Operations with CSV files](#operations-with-csv-files)
  * [Export table to CSV](#export-table-to-csv)
  * [Export query to CSV](#export-query-to-csv)
  * [Import CSV to Table](#import-csv-to-table)
  * [Import and update CSV to Table](#import-and-update-csv-to-table)
  * [Create table from CSV file](#create-table-from-csv-file)
-* Do str_replace in given database, table or defined columns in table
+* [Do str_replace in given database, table or defined columns in table](#string-search-and-replace-in-all-or-defined-table-columns)
 * [Basic table operations](#basic-table-operation)
  * [Copy table (with data included)](#basic-table-operation)
  * [Copy table structure](#basic-table-operation)
@@ -32,6 +40,7 @@ It can:
  * [Get table columns](#get-table-columns)
  * [Get database size](#get-database-size)
  * [Get the next value of an auto-incremented table field](#next-autoincrement)
+ * [Table revision](#table-revision)
 * [Log queries / errors](#loging-queries-and-errors)
 * Errors backtrace
 
@@ -149,7 +158,9 @@ $db->setCharset('utf8');
 $db->close();
 ```
 
-### Select example with fetch result
+### Execute arbitrary queries and return the results in arrays
+
+#### Select example with fetch result
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -207,7 +218,7 @@ $db->freeResult();
 $db->close();
 ```
 
-### Prepared statements (works only with MySQLi!)
+#### Prepared statements (works only with MySQLi!)
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -235,7 +246,7 @@ while ($row = $result->fetch_assoc()) {
 $db->close();
 ```
 
-### Prepared statements (works only with MySQLi!) - if mysqlnd driver is not installed
+#### Prepared statements (works only with MySQLi!) - if mysqlnd driver is not installed
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -264,7 +275,7 @@ print_r($data);
 $db->close();
 ```
 
-### Fetch query to array
+#### Fetch query to array
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -287,7 +298,7 @@ print_r($array);
 $db->close();
 ```
 
-### Multi results
+#### Multi results
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -326,7 +337,7 @@ $db->freeResult($r2);
 $db->close();
 ```
 
-### Rows, Cols num
+#### Rows, Cols num
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -349,7 +360,7 @@ $db->freeResult();
 $db->close();
 ```
 
-### Count rows
+#### Count rows
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -376,8 +387,9 @@ echo "Count all: {$count}, Count today: {$count2}";
 // Close connection
 $db->close();
 ```
+### Execute UPDATE or INSERT queries from parameters that define the tables, fields, field values and conditions
 
-### Array to insert
+#### Array to insert
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -429,23 +441,8 @@ $db->arrayToInsert('table', array($data, $data2 /*, $data3 .... */ ));
 // Close connection
 $db->close();
 ```
-### Next AutoIncrement
-```php
-$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
-// Connect to host
-$db->connect();
-
-// Returns next auto increment value
-$auto_increment = $db->nextAutoIncrement('table');
-
-echo "Next auto increment id is: {$auto_increment}";
-
-// Close connection
-$db->close();
-```
-
-### Array to update
+#### Array to update
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -581,7 +578,7 @@ $db->dropTable(array('table_copy3', 'table_copy2'));
 $db->close();
 ```
 
-### Get database size
+#### Get database size
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -597,6 +594,58 @@ $db->connect();
 // function getDataBaseSize($sizeIn = 'MB', $round = 2, $link = 0);
 
 echo 'Database size is: ', $db->getDataBaseSize('mb', 2), ' MB';
+
+// Close connection
+$db->close();
+```
+#### Next AutoIncrement
+```php
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect to host
+$db->connect();
+
+// Returns next auto increment value
+$auto_increment = $db->nextAutoIncrement('table');
+
+echo "Next auto increment id is: {$auto_increment}";
+
+// Close connection
+$db->close();
+```
+
+#### Table revision
+```php
+
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect
+$db->connect();
+
+// Init table revision (do this only once!)
+$db->initTableRevision('rev-table');
+
+// Time to restore to ... 
+$time = '2014-06-25 14:26:03';
+
+/** Create table from current revision time
+ * @param 	string		$table		- New table name
+ * @param	string 		$rev_table	- Revision table (origin table)
+ * @param	string 		$id_field	- Unique field name
+ * @param	datetime	- Revision time
+ */
+// $db->createTableFromRevisionTime($table, $rev_table, $id_field, $time);
+		
+$db->createTableFromRevisionTime('rev-table' . '-' . $time, 'rev-table', 'id', $time);
+
+/** Restore table from current revision time
+ * @param 	string		$table		- New table name
+ * @param	string 		$id_field	- Unique field name
+ * @param	datetime	- Revision time
+ */
+//$db->restoreTableFromRevisionTime($table, $id_field, $time);
+
+$db->restoreTableFromRevisionTime('rev-table', 'id', $time);
 
 // Close connection
 $db->close();
@@ -634,7 +683,9 @@ $db->query('SELECT * FROM `table` asfd!@#$');
 $db->close();
 ```
 
-### Export Table to CSV
+### Operations with CSV files
+
+#### Export Table to CSV
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -673,7 +724,7 @@ $db->exportTable2CSV('table', 'test_files/test-4.txt', '*', 'id < 8', '1,5');
 $db->close();
 ```
 
-### Export query to CSV
+#### Export query to CSV
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -702,7 +753,7 @@ $path = $db->query2CSV('select * from `table` limit 2,2', 'test_files/test-query
 $db->close();
 ```
 
-### Import CSV to Table
+#### Import CSV to Table
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -731,38 +782,7 @@ $db->importCSV2Table('test_files/test-1.txt', 'table');
 $db->close();
 ```
 
-### Create table from CSV file
-```php
-$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
-
-// Connect to host
-$db->connect(); 
-
-$db->dropTable('csv_to_table_test');
-$db->createTableFromCSV('test_files/countrylist.csv', 'csv_to_table_test');
-
-$db->dropTable('csv_to_table_test_no_column_names');
-$db->createTableFromCSV('test_files/countrylist1.csv', 'csv_to_table_test_no_column_names', ',', '"', '\\', 0, array(), 'generate', '\r\n');
-
-/** Create table from CSV file and imports CSV data to Table with possibility to update rows while import.
- * @param 	string		$file			- CSV File path
- * @param 	string 		$table 			- Table name
- * @param	string		$delimiter		- COLUMNS TERMINATED BY (Default: ',')
- * @param	string 		$enclosure		- OPTIONALLY ENCLOSED BY (Default: '"')
- * @param 	string		$escape 		- ESCAPED BY (Default: '\')
- * @param 	integer 	$ignore 		- Number of ignored rows (Default: 1)
- * @param 	array		$update 		- If row fields needed to be updated eg date format or increment (SQL format only @FIELD is variable with content of that field in CSV row) $update = array('SOME_DATE' => 'STR_TO_DATE(@SOME_DATE, "%d/%m/%Y")', 'SOME_INCREMENT' => '@SOME_INCREMENT + 1')
- * @param 	string 		$getColumnsFrom	- Get Columns Names from (file or generate) - this is important if there is update while inserting (Default: file)
- * @param 	string 		$newLine		- New line delimiter (Default: \n)
- * @return 	number of inserted rows or false
- */
-// function createTableFromCSV($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = '\r\n');
-
-// Close connection
-$db->close();
-```
-
-### Import and update CSV to Table
+#### Import and update CSV to Table
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 
@@ -788,6 +808,37 @@ $db->importUpdateCSV2Table('test_files/countrylist.csv', 'csv_to_table_test', ',
  * @return 	number of inserted rows or false
  */
 // $db->importUpdateCSV2Table($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = '\n');
+
+// Close connection
+$db->close();
+```
+
+#### Create table from CSV file
+```php
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect to host
+$db->connect(); 
+
+$db->dropTable('csv_to_table_test');
+$db->createTableFromCSV('test_files/countrylist.csv', 'csv_to_table_test');
+
+$db->dropTable('csv_to_table_test_no_column_names');
+$db->createTableFromCSV('test_files/countrylist1.csv', 'csv_to_table_test_no_column_names', ',', '"', '\\', 0, array(), 'generate', '\r\n');
+
+/** Create table from CSV file and imports CSV data to Table with possibility to update rows while import.
+ * @param 	string		$file			- CSV File path
+ * @param 	string 		$table 			- Table name
+ * @param	string		$delimiter		- COLUMNS TERMINATED BY (Default: ',')
+ * @param	string 		$enclosure		- OPTIONALLY ENCLOSED BY (Default: '"')
+ * @param 	string		$escape 		- ESCAPED BY (Default: '\')
+ * @param 	integer 	$ignore 		- Number of ignored rows (Default: 1)
+ * @param 	array		$update 		- If row fields needed to be updated eg date format or increment (SQL format only @FIELD is variable with content of that field in CSV row) $update = array('SOME_DATE' => 'STR_TO_DATE(@SOME_DATE, "%d/%m/%Y")', 'SOME_INCREMENT' => '@SOME_INCREMENT + 1')
+ * @param 	string 		$getColumnsFrom	- Get Columns Names from (file or generate) - this is important if there is update while inserting (Default: file)
+ * @param 	string 		$newLine		- New line delimiter (Default: \n)
+ * @return 	number of inserted rows or false
+ */
+// function createTableFromCSV($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = '\r\n');
 
 // Close connection
 $db->close();
@@ -888,39 +939,4 @@ $db->query("select * from asdf2");
 $db->close();
 ```
 
-### Table revision
-```php
 
-$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
-
-// Connect
-$db->connect();
-
-// Init table revision (do this only once!)
-$db->initTableRevision('rev-table');
-
-// Time to restore to ... 
-$time = '2014-06-25 14:26:03';
-
-/** Create table from current revision time
- * @param 	string		$table		- New table name
- * @param	string 		$rev_table	- Revision table (origin table)
- * @param	string 		$id_field	- Unique field name
- * @param	datetime	- Revision time
- */
-// $db->createTableFromRevisionTime($table, $rev_table, $id_field, $time);
-		
-$db->createTableFromRevisionTime('rev-table' . '-' . $time, 'rev-table', 'id', $time);
-
-/** Restore table from current revision time
- * @param 	string		$table		- New table name
- * @param	string 		$id_field	- Unique field name
- * @param	datetime	- Revision time
- */
-//$db->restoreTableFromRevisionTime($table, $id_field, $time);
-
-$db->restoreTableFromRevisionTime('rev-table', 'id', $time);
-
-// Close connection
-$db->close();
-```
