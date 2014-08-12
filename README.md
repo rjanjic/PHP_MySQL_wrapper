@@ -17,9 +17,9 @@ This class implements a generic MySQL database access wrapper.
  * [Count rows](#count-rows)
 * Execute UPDATE or INSERT queries from parameters that define the tables, fields, field values and conditions
  * [Array to insert](#array-to-insert)
- * [Multiple array to insert](#array-to-insert)
+ * [Multiple array to insert](#array-to-insert-multirow)
  * [Array to update](#array-to-update)
- * [Multiple array to update](#array-to-update)
+ * [Multiple array to update](#array-to-update-multirow)
 * [Count the number of rows of a table that match a given condition](#count-rows)
 * [Delete table rows that match a given condition](#delete-rows)
 * [Operations with CSV files](#operations-with-csv-files)
@@ -442,6 +442,42 @@ $db->arrayToInsert('table', array($data, $data2 /*, $data3 .... */ ));
 $db->close();
 ```
 
+#### Array to insert multirow
+```php
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect to host
+$db->connect();
+ 
+// Array data
+// [fealdname] = feald value
+$data = array();
+ 
+// Data set 1
+$data[] = array(
+	'firstname' => 'foo',
+	'surname' => 'bar',
+	'email' => 'hi@radovanjanjic.com',
+	'date' => 'now()'
+);
+ 
+// Data set 2
+$data[] = array(
+	'firstname' => 'baz',
+	'surname' => 'qux',
+	'email' => 'hi@radovanjanjic.com',
+	'date' => 'now()'
+);
+ 
+// Data set ...
+ 
+// $db->arrayToInsert( ... ) multirow returns TRUE on success
+$db->arrayToInsert('table', $data);
+
+// Close connection
+$db->close();
+```
+
 #### Array to update
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
@@ -495,6 +531,50 @@ $db->arrayToUpdate('table', array($data, $data2 /*, $data3 .... */ ));
  * @return 	number of updated rows or false
  */
 // $db->arrayToUpdate($table, $data, $where = NULL, $limit = 0, $link = 0);
+
+// Close connection
+$db->close();
+```
+
+#### Array to update multirow
+```php
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect to host
+$db->connect();
+
+// Array data
+// [fealdname] = feald value
+$data = array();
+
+// Data set 1
+$data[] = array(
+ 
+	// Condition 
+	'id' => 1, // One of the fields has to be primary or unique key in order to update
+	
+	// Data to update
+	'firstname' => 'foooo',
+	'surname' => 'barrr'
+	// ...
+);
+
+// Data set 2
+$data[] = array(
+ 
+	// Condition 
+	'id' => 2, // One of the fields has to be primary or unique key in order to update
+	
+	// Data to update
+	'firstname' => 'bazzz',
+	'surname' => 'quxxx'
+	// ...
+);
+
+// Data set ...
+
+// $db->arrayToUpdate( ... ) multirow returns TRUE on success
+$db->arrayToUpdate('table', $data);
 
 // Close connection
 $db->close();
