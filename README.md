@@ -754,7 +754,7 @@ $db->connect();
 $db->query2XML('select * from `table` limit 10', 'items', 'item', 'test_files/test-query2xml.csv');
 
 // Return result as XML
-$xml = $db->query2CSV('select * from `table` limit 10', 'items', 'item');
+$xml = $db->query2XML('select * from `table` limit 10', 'items', 'item');
 
 /** Export query to XML file or return as XML string
  * @param	string		$query			- mysql query
