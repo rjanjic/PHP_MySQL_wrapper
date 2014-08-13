@@ -57,7 +57,7 @@ This class implements a generic MySQL database access wrapper.
 ### Connectivity settings
 ```php
 // Set your connectivity settings
-define('MySQL_HOST', 'localhost');
+define('MySQL_HOST', 'localhost'); // localhost:3306
 define('MySQL_USER', 'root');
 define('MySQL_PASS', '');
 define('MySQL_DB', 'test');
