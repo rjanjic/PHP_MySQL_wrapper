@@ -28,6 +28,8 @@ This class implements a generic MySQL database access wrapper.
  * [Import CSV to Table](#import-csv-to-table)
  * [Import and update CSV to Table](#import-and-update-csv-to-table)
  * [Create table from CSV file](#create-table-from-csv-file)
+* [Operations with XML files](#operations-with-xml-files)
+ * [Export query to XML](#export-query-to-xml)
 * [Do str_replace in given database, table or defined columns in table](#string-search-and-replace-in-all-or-defined-table-columns)
  * [Search string & replace string](#string-search-and-replace-in-all-or-defined-table-columns)
  * [Search array & replace string](#string-search-and-replace-in-all-or-defined-table-columns)
@@ -734,6 +736,33 @@ $db->createTableFromCSV('test_files/countrylist1.csv', 'csv_to_table_test_no_col
  * @return 	number of inserted rows or false
  */
 // function createTableFromCSV($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = '\r\n');
+
+// Close connection
+$db->close();
+```
+
+### Operations with XML files
+
+#### Export query to XML
+```php
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect
+$db->connect();
+
+// Save result as file
+$db->query2XML('select * from `table` limit 10', 'items', 'item', 'test_files/test-query2xml.csv');
+
+// Return result as XML
+$xml = $db->query2CSV('select * from `table` limit 10', 'items', 'item');
+
+/** Export query to XML file or return as XML string
+ * @param	string		$query			- mysql query
+ * @param	string		$rootElementName	- root element name
+ * @param	string		$childElementName	- child element name
+ * @return	string		- XML
+ */
+// function query2XML($query, $rootElementName, $childElementName, $file = NULL);
 
 // Close connection
 $db->close();
