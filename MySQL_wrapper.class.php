@@ -184,7 +184,7 @@ class MySQL_wrapper {
 		$this->database = $database;
 	}
 	
-	/** Private clone method to prevent cloning of the instance of the MySQL_wrapper instance.
+	/** Private clone method to prevent cloning of the MySQL_wrapper instance.
 	 * @return void
 	 */
 	private function __clone() {
@@ -401,7 +401,9 @@ class MySQL_wrapper {
 		if ($fetchFirst && $this->affected > 0) {
 			$array = $this->fetchArray($q);
 		} else {
-			while ($row = $this->fetchArray($q)) $array[] = $row;
+			while ($row = $this->fetchArray($q)) {
+				$array[] = $row;
+			}
 		}
 		$this->freeResult($q);
 		return $array;
@@ -527,10 +529,14 @@ class MySQL_wrapper {
 				$line = fgets($f);
 				fclose($f);
 				$columns = explode($delimiter, str_replace($enclosure, NULL, trim($line)));
-				foreach ($columns as $c) preg_match($this->REGEX['COLUMN'], $c) or $this->error("ERROR", "Invalid Column Name: {$c} in CSV file: {$file}. Data can not be loaded into table: {$table}.");
+				foreach ($columns as $c) {
+					preg_match($this->REGEX['COLUMN'], $c) or $this->error("ERROR", "Invalid Column Name: {$c} in CSV file: {$file}. Data can not be loaded into table: {$table}.");
+				}
 			}
 			
-			foreach ($columns as &$c) $c = (in_array($c, array_keys($update))) ? '@' . $c : "`{$c}`";
+			foreach ($columns as &$c) {
+				$c = (in_array($c, array_keys($update))) ? '@' . $c : "`{$c}`";
+			}
 			$sql .= " (" . implode(', ', $columns) .  ") ";
 			
 			$fields = array();
@@ -793,7 +799,7 @@ class MySQL_wrapper {
 	 * @return 	resource or false
 	 */
 	public function truncateTable($table) {
-		return $this->query("TRUNCATE TABLE `" . $table . "`;"); 
+		return $this->query("TRUNCATE TABLE `{$table}`;"); 
 	}
 	
 	/** Drop table(s)
@@ -806,7 +812,6 @@ class MySQL_wrapper {
 	}
 	
 	/** Data Base size in B / KB / MB / GB / TB
-	 * @param 	string	 	$sizeIn		- Size in B / KB / MB / GB / TB
 	 * @param 	string	 	$sizeIn		- Size in B / KB / MB / GB / TB
 	 * @param 	integer	 	$round		- Round on decimals
 	 * @return 	- Size in B / KB / MB / GB / TB
@@ -896,16 +901,16 @@ class MySQL_wrapper {
 		
 		// XML header
 		if ($saveToFile) {
-			file_put_contents($file, "<?xml version=\"1.0\" encoding=\"" . strtoupper($this->charset) . "\" ?>\n<" . $rootElementName . ">\n", LOCK_EX);
+			file_put_contents($file, "<?xml version=\"1.0\" encoding=\"" . strtoupper($this->charset) . "\" ?>" . PHP_EOL . "<{$rootElementName}>" . PHP_EOL, LOCK_EX);
 		} else {
-			$xml = "<?xml version=\"1.0\" encoding=\"" . strtoupper($this->charset) . "\" ?>\n";
-			$xml .= "<" . $rootElementName . ">\n";
+			$xml = "<?xml version=\"1.0\" encoding=\"" . strtoupper($this->charset) . "\" ?>" . PHP_EOL;
+			$xml .= "<{$rootElementName}>" . PHP_EOL;
 		}
 		
 		// Query rows
-		while($row = $this->call('fetch_object', $r)) {
+		while ($row = $this->call('fetch_object', $r)) {
 			// Create the first child element
-			$record = "\t<" . $childElementName . ">\n";
+			$record = "\t<{$childElementName}>" . PHP_EOL;
 			for ($i = 0; $i < $this->call('num_fields', $r); $i++) {
 				// Different methods of getting field name for mysql and mysqli
 				if ($this->extension == 'mysql') {
@@ -915,16 +920,16 @@ class MySQL_wrapper {
 					$fieldName = $colObj->name;
 				}
 				// The child will take the name of the result column name
-				$record .= "\t\t<" . $fieldName . ">";
+				$record .= "\t\t<{$fieldName}>";
 				// Set empty columns with NULL and escape XML entities
 				if(!empty($row->$fieldName)) {
 					$record .= htmlspecialchars($row->$fieldName, ENT_XML1);
 				} else {
 					$record .= NULL; 
 				}
-				$record .= "</" . $fieldName . ">\n";
+				$record .= "</{$fieldName}>" . PHP_EOL;
 			}
-			$record .= "\t</" . $childElementName . ">\n";
+			$record .= "\t</{$childElementName}>" . PHP_EOL;
 			if ($saveToFile) {
 				file_put_contents($file, $record, FILE_APPEND | LOCK_EX);
 			} else {
@@ -934,20 +939,12 @@ class MySQL_wrapper {
 		
 		// Output
 		if ($saveToFile) {
-			file_put_contents($file, "</" . $rootElementName . ">\n", FILE_APPEND | LOCK_EX);
+			file_put_contents($file, "</{$rootElementName}>" . PHP_EOL, FILE_APPEND | LOCK_EX);
 			return TRUE;
 		} else {
-			$xml .= "</" . $rootElementName . ">\n";
+			$xml .= "</{$rootElementName}>" . PHP_EOL;
 			return $xml; 
 		}
-	}
-	
-	/** Begin Transaction
-	 * @param 	void
-	 */
-	public function begin() { 
-		$this->query("START TRANSACTION"); 
-		return $this->query("BEGIN"); 
 	}
 	
 	/** Replace all occurrences of the search string with the replacement string in MySQL Table Column(s).
@@ -962,7 +959,7 @@ class MySQL_wrapper {
 	public function strReplace($table, $columns, $search, $replace, $where = NULL, $limit = 0) {
 		// Replace in whole DB
 		if ($table == '*') {
-			if (!is_array($columns)){
+			if (!is_array($columns)) {
 				$stringColumns = $columns;
 				if ($stringColumns != '*') {
 					// Put columns into array
@@ -995,7 +992,7 @@ class MySQL_wrapper {
 		}
 		
 		// Columns
-		if (!is_array($columns)){
+		if (!is_array($columns)) {
 			$stringColumns = $columns;
 			$columns = array();
 			if ($stringColumns == '*') {
@@ -1025,19 +1022,27 @@ class MySQL_wrapper {
 		$this->query("UPDATE `{$table}` SET " . implode(', ', $update) . ($where ? " WHERE {$where}" : NULL) . ($limit ? " LIMIT {$limit}" : NULL) . ";");
 		return $this->affected;
 	}
+
+	/** Begin Transaction
+	 * @param 	void
+	 */
+	public function begin() { 
+		$this->query("START TRANSACTION;"); 
+		return $this->query("BEGIN;"); 
+	}
 	
 	/** Commit
 	 * @param 	void
 	 */
 	public function commit() { 
-		return $this->query("COMMIT"); 
+		return $this->query("COMMIT;"); 
 	} 
 	
 	/** Rollback
 	 * @param 	void
 	 */
 	public function rollback() { 
-		return $this->query("ROLLBACK"); 
+		return $this->query("ROLLBACK;"); 
 	} 
 	
 	/** Transaction
