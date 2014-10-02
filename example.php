@@ -34,7 +34,7 @@ $db->query("CREATE TABLE IF NOT EXISTS `table` (
 
 
 // Some dummy data, uncomment to insert
-if(!$db->countRows('table') > 0)
+if (!$db->countRows('table') > 0)
 $db->query("INSERT INTO `table` (`id`, `firstname`, `surname`, `email`, `date`) VALUES
 (1, 'Radovan', 'Janjic', '', '2012-11-04'),
 (2, 'Radovan', 'Janjic', 'rade@it-radionica.com', '2012-11-04'),

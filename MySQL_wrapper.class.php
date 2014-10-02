@@ -164,7 +164,7 @@ class MySQL_wrapper {
 	 * @param 	string 		$database 	- MySQL Database
 	 * @return	- singleton instance
 	 */
-	public static function getInstance($server = NULL, $username = NULL, $password = NULL, $database = NULL){
+	public static function getInstance($server = NULL, $username = NULL, $password = NULL, $database = NULL) {
 		$md5 = md5(implode('|', array($server, $username, $password, $database)));
 		if (empty(self::$instance[$md5])) {
 			self::$instance[$md5] = new MySQL_wrapper($server, $username, $password, $database);  
@@ -327,7 +327,7 @@ class MySQL_wrapper {
 			$sql = str_replace($p['search'], $p['replace'], $sql);
 			unset($l, $p);
 		}
-		if($this->logQueries) $start = $this->getMicrotime();
+		if ($this->logQueries) $start = $this->getMicrotime();
 		$this->query = $this->call('query', $sql) or $this->error("Query fail: " . $sql);
 		$this->affected = $this->call('affected_rows');
 		if ($this->query && $this->logQueries) $this->log('QUERY', "EXEC -> " . number_format($this->getMicrotime() - $start, 8) . " -> " . $sql);
@@ -569,7 +569,7 @@ class MySQL_wrapper {
 		// Remove auto_increment if exists
 		$change = array();
 		$this->query("SHOW COLUMNS FROM `{$tmp_name}` WHERE `Key` NOT LIKE '';");
-		if($this->affected > 0){
+		if ($this->affected > 0) {
 			while ($row = $this->fetchArray()) {
 				$change[$row['Field']] = "CHANGE `{$row['Field']}` `{$row['Field']}` {$row['Type']}";
 			}
@@ -923,7 +923,7 @@ class MySQL_wrapper {
 				// The child will take the name of the result column name
 				$record .= "\t\t<{$fieldName}>";
 				// Set empty columns with NULL and escape XML entities
-				if(!empty($row->$fieldName)) {
+				if (!empty($row->$fieldName)) {
 					$record .= htmlspecialchars($row->$fieldName, ENT_XML1);
 				} else {
 					$record .= NULL; 
@@ -1079,7 +1079,7 @@ class MySQL_wrapper {
 		// Remove auto_increment if exists
 		$change = array();
 		$this->query("SHOW COLUMNS FROM `{$rev_table}` WHERE `Key` NOT LIKE '' OR `Default` IS NOT NULL;");
-		if($this->affected > 0){
+		if ($this->affected > 0) {
 			while ($row = $this->fetchArray()) {
 				$change[$row['Field']] = "CHANGE `{$row['Field']}` `{$row['Field']}` {$row['Type']} DEFAULT " . (($row['Extra']) ? 0 : 'NULL');
 			}
@@ -1092,7 +1092,7 @@ class MySQL_wrapper {
 		// Remove indexes from revision table
 		$this->query("SHOW INDEXES FROM `{$rev_table}`;");
 		$drop = array();
-		if($this->affected > 0){
+		if ($this->affected > 0) {
 			while ($row = $this->fetchArray()) {
 				$drop[] = "DROP INDEX `{$row['Key_name']}`";
 			}

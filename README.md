@@ -383,7 +383,7 @@ $db->connect();
 $count = $db->countRows('table');
 
 // Count with condition
-$count2 = $db->countRows('table', "`date` = '".date("Y-m-d")."'");
+$count2 = $db->countRows('table', "`date` = '" . date("Y-m-d") . "'");
 
 // ...
 echo "Count all: {$count}, Count today: {$count2}";
