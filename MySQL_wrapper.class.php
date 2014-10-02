@@ -87,14 +87,14 @@ class MySQL_wrapper {
 	public $displayError = TRUE;
 	
 	/** Link
-	 * @var resource
+	 * @var resurse
 	 */
-	public $link = 0;
+	private $link = 0;
 	
 	/** Query
-	 * @var resource
+	 * @var resurse
 	 */
-	public $query = 0;
+	private $query = 0;
 	
 	/** Affected Rows 
 	 * @var integer
