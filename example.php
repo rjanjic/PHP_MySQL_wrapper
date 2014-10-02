@@ -91,7 +91,7 @@ $db->connect(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 $db->close();
 
 // Connect with new link
-$db->connect(true);
+$db->connect(TRUE);
 //
 // Connection 3 queries
 //
@@ -132,12 +132,12 @@ $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 $db->connect();
 
 // MySQL query
-$db->query('SELECT * FROM `table`');
+$db->query('SELECT * FROM `table`;');
 
 // Int affected rows
-if($db->affected){
+if ($db->affected) {
 	echo "<hr /><strong>Example 4 ( fetch row - array)</strong><pre>";
-	while($row = $db->fetchArray()){
+	while ($row = $db->fetchArray()) {
 		print_r($row);
 	}
 	echo "</pre>";
@@ -163,9 +163,9 @@ $params['limit'] = 5;
 $db->query("SELECT * FROM `table` WHERE `firstname` LIKE '@name%' AND `surname` LIKE '%@lname%' OR `id` = @id LIMIT @limit;", $params);
 
 // Int affected rows
-if($db->affected){
+if ($db->affected) {
 	echo "<hr /><strong>Example 4 ( fetch row - array)</strong><pre>";
-	while($row = $db->fetchArray()){
+	while ($row = $db->fetchArray()) {
 		print_r($row);
 	}
 	echo "</pre>";
@@ -228,15 +228,15 @@ $r2 = $db->query('SELECT * FROM `table` LIMIT 2');
 
 // Result 1 data
 echo "<hr /><strong>Example 6 (multi results)</strong><br> Result 1:<pre>";
-if($db->numRows($r1)){
-	while($row = $db->fetchArray($r1)){
+if ($db->numRows($r1)) {
+	while ($row = $db->fetchArray($r1)) {
 		print_r($row);
 	}
 }
 echo "</pre>\nResult 2:\n<pre>";
 // Result 2 data
-if($db->numRows($r2)){
-	while($row = $db->fetchArray($r2)){
+if ($db->numRows($r2)) {
+	while ($row = $db->fetchArray($r2)) {
 		print_r($row);
 	}
 }
@@ -256,7 +256,7 @@ $db->close();
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 $db->connect();
 
-$db->query('SELECT * FROM `table`');
+$db->query('SELECT * FROM `table`;');
 
 $cols = $db->numFields();
 $rows = $db->numRows();
@@ -371,7 +371,7 @@ $data['email'] = 'null';
 $data['date'] = 'now()';
 
 $db->arrayToUpdate('table', $data, "`id` = {$insert_id}");
-if($db->affected){
+if ($db->affected) {
 	echo "<hr /><strong>Example 11 (array to update)</strong><br />Updated: {$db->affected} row(s).<br />";
 }
 
@@ -415,7 +415,7 @@ $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 $db->connect();
 
 $db->deleteRow('table', "`id` = {$insert_id}");
-if($db->affected){
+if ($db->affected) {
 	echo "<hr><strong>Example 12 (delete row)</strong><br />Deleted: {$db->affected} row(s).<br />";
 }
 // More options
@@ -677,7 +677,7 @@ $queries[] = '...';
  * @param 	array		$qarr	- Array with Queries
  * @link	http://dev.mysql.com/doc/refman/5.0/en/commit.html
  */
-// $db->transaction($qarr = array())
+// function transaction($qarr = array())
 // Close connection
 $db->close();
 ///////////////////////////////////////////////////////////////////////////////////////////

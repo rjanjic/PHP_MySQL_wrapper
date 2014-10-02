@@ -4,6 +4,7 @@
  * Projectname:   PHP MySQL Wrapper Class 
  * Version:       1.6
  * Author:        Radovan Janjic <hi@radovanjanjic.com>
+ * Link:          https://github.com/uzi88/PHP_MySQL_wrapper
  * Last modified: 11 08 2014
  * Copyright (C): 2008-2014 IT-radionica.com, All Rights Reserved
  * 

@@ -1,5 +1,5 @@
-PHP_MySQL_wrapper
-=================
+PHP MySQL Wrapper Class
+=======================
 
 This class implements a generic MySQL database access wrapper. 
 
@@ -183,8 +183,8 @@ $db->connect();
 $db->query('SELECT * FROM `table`');
 
 // Int affected rows
-if($db->affected > 0){
-	while($row = $db->fetchArray()){
+if ($db->affected > 0) {
+	while ($row = $db->fetchArray()) {
 		// Result
 		print_r($row);
 	}
@@ -216,8 +216,8 @@ $params['limit'] = 5;
 $db->query("SELECT * FROM `table` WHERE `firstname` LIKE '@name%' AND `surname` LIKE '%@lname%' OR `id` = @id LIMIT @limit;", $params);
 
 // Int affected rows
-if($db->affected > 0){
-	while($row = $db->fetchArray()){
+if ($db->affected > 0) {
+	while ($row = $db->fetchArray()) {
 		// Print result row
 		print_r($row);
 	}
@@ -324,16 +324,16 @@ $r1 = $db->query('SELECT * FROM `table`');
 $r2 = $db->query('SELECT * FROM `table` LIMIT 2');
 
 // Result 1 data
-if($db->numRows($r1)){
-	while($row = $db->fetchArray($r1)){
+if ($db->numRows($r1)) {
+	while ($row = $db->fetchArray($r1)) {
 		// Print rows
 		print_r($row);
 	}
 }
 
 // Result 2 data
-if($db->numRows($r2)){
-	while($row = $db->fetchArray($r2)){
+if ($db->numRows($r2)) {
+	while ($row = $db->fetchArray($r2)) {
 		// Print rows
 		print_r($row);
 	}
@@ -393,8 +393,9 @@ echo "Count all: {$count}, Count today: {$count2}";
  * @param 	string 		$table 	- Table name
  * @param 	string 		$where 	- WHERE Clause
  * @return 	integer or false
+ *
+ * function countRows($table, $where = NULL);
  */
-// $db->countRows($table, $where = NULL)
 
 // Close connection
 $db->close();
@@ -428,8 +429,9 @@ echo "Last insert id is: {$insert_id}";
  * @param 	boolean		$ingore	- INSERT IGNORE (row won't actually be inserted if it results in a duplicate key)
  * @param 	string 		$duplicateupdate 	- ON DUPLICATE KEY UPDATE (The ON DUPLICATE KEY UPDATE clause can contain multiple column assignments, separated by commas.)
  * @return 	insert id or false
+ *
+ * function arrayToInsert($table, $data, $ignore = FALSE, $duplicateupdate = NULL);
  */
-// $db->arrayToInsert($table, $data, $ignore = FALSE, $duplicateupdate = NULL);
 
 // Close connection
 $db->close();
@@ -490,7 +492,7 @@ $data['date'] = 'now()';
 
 
 $db->arrayToUpdate('table', $data, "`id` = {$insert_id}");
-if($db->affected > 0){
+if ($db->affected > 0) {
 	echo "Updated: {$db->affected} row(s).";
 }
 
@@ -502,8 +504,9 @@ if($db->affected > 0){
  * @param 	integer 	$limit 	- Limit offset
  * @param 	resource 	$link 	- link identifier
  * @return 	number of updated rows or false
+ *
+ * function arrayToUpdate($table, $data, $where = NULL, $limit = 0, $link = 0);
  */
-// $db->arrayToUpdate($table, $data, $where = NULL, $limit = 0, $link = 0);
 
 // Close connection
 $db->close();
@@ -563,7 +566,7 @@ $db->connect();
 // Delete row
 $db->deleteRow('table', "`id` = {$insert_id}");
 
-if($db->affected > 0) {
+if ($db->affected > 0) {
 	echo "Deleted: {$db->affected} row(s).";
 }
 // More options
@@ -573,8 +576,9 @@ if($db->affected > 0) {
  * @param 	integer 	$limit 	- Limit offset
  * @param 	resource 	$link 	- link identifier
  * @return 	number of deleted rows or false
+ *
+ * function deleteRow($table, $where = NULL, $limit = 0, $link = 0);
  */
-// $db->deleteRow($table, $where = NULL, $limit = 0, $link = 0);
 
 // Close connection
 $db->close();
@@ -614,8 +618,9 @@ $db->exportTable2CSV('table', 'test_files/test-4.txt', '*', 'id < 8', '1,5');
  * @param 	string 		$newLine		- New line detelimiter (Default: \n)
  * @param 	boolean		$showColumns 	- Columns names in first line
  * @return 	number of inserted rows or false
+ *
+ * function exportTable2CSV($table, $file, $columns = '*', $where = NULL, $limit = 0, $delimiter = ',', $enclosure = '"', $escape = '\\', $newLine = '\n', $showColumns = TRUE);
  */
-// $db->exportTable2CSV($table, $file, $columns = '*', $where = NULL, $limit = 0, $delimiter = ',', $enclosure = '"', $escape = '\\', $newLine = '\n', $showColumns = TRUE);
 
 // Close connection
 $db->close();
@@ -643,8 +648,9 @@ $path = $db->query2CSV('select * from `table` limit 2,2', 'test_files/test-query
  * @param 	string 		$newLine		- New line delimiter (Default: \n)
  * @param 	boolean		$showColumns 	- Columns names in first line
  * @return 	- File path
+ *
+ * function query2CSV($sql, $file, $delimiter = ',', $enclosure = '"', $escape = '\\', $newLine = '\n', $showColumns = TRUE);
  */
-// function query2CSV($sql, $file, $delimiter = ',', $enclosure = '"', $escape = '\\', $newLine = '\n', $showColumns = TRUE);
 
 // Close connection
 $db->close();
@@ -672,8 +678,9 @@ $db->importCSV2Table('test_files/test-1.txt', 'table');
  * @param 	string 		$getColumnsFrom	- Get Columns Names from (file or table) - this is important if there is update while inserting (Default: file)
  * @param 	string 		$newLine		- New line detelimiter (Default: \n)
  * @return 	number of inserted rows or false
+ *
+ * function importCSV2Table($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = '\n');
  */
-// $db->importCSV2Table($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = '\n');
 
 // Close connection
 $db->close();
@@ -703,8 +710,9 @@ $db->importUpdateCSV2Table('test_files/countrylist.csv', 'csv_to_table_test', ',
  * @param 	string 		$getColumnsFrom	- Get Columns Names from (file or table) - this is important if there is update while inserting (Default: file)
  * @param 	string 		$newLine		- New line detelimiter (Default: \n)
  * @return 	number of inserted rows or false
+ *
+ * function importUpdateCSV2Table($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = '\n');
  */
-// $db->importUpdateCSV2Table($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = '\n');
 
 // Close connection
 $db->close();
@@ -734,8 +742,9 @@ $db->createTableFromCSV('test_files/countrylist1.csv', 'csv_to_table_test_no_col
  * @param 	string 		$getColumnsFrom	- Get Columns Names from (file or generate) - this is important if there is update while inserting (Default: file)
  * @param 	string 		$newLine		- New line delimiter (Default: \n)
  * @return 	number of inserted rows or false
- */
-// function createTableFromCSV($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = '\r\n');
+ *
+ * function createTableFromCSV($file, $table, $delimiter = ',', $enclosure = '"', $escape = '\\', $ignore = 1, $update = array(), $getColumnsFrom = 'file', $newLine = '\r\n');
+ */ 
 
 // Close connection
 $db->close();
@@ -761,8 +770,9 @@ $xml = $db->query2XML('select * from `table` limit 10', 'items', 'item');
  * @param	string		$rootElementName	- root element name
  * @param	string		$childElementName	- child element name
  * @return	string		- XML
+ *
+ * function query2XML($query, $rootElementName, $childElementName, $file = NULL);
  */
-// function query2XML($query, $rootElementName, $childElementName, $file = NULL);
 
 // Close connection
 $db->close();
@@ -789,8 +799,9 @@ $db->transaction($queries);
 /** Transaction
  * @param 	array		$qarr	- Array with Queries
  * @link	http://dev.mysql.com/doc/refman/5.0/en/commit.html
+ *
+ * function transaction($qarr = array());
  */
-// $db->transaction($qarr = array());
 
 // Close connection
 $db->close();
@@ -833,8 +844,9 @@ $db->strReplace('*', '*', 'search', 'replace');
  * @param 	string 		$where 	 - WHERE Clause
  * @param 	integer 	$limit 	 - Limit offset
  * @return  integer 	- Affected rows
+ *
+ * function strReplace($table, $columns, $search, $replace, $where = NULL, $limit = 0);
  */
-// function strReplace($table, $columns, $search, $replace, $where = NULL, $limit = 0);
 
 // Close connection
 $db->close();
@@ -903,8 +915,9 @@ $db->connect();
  * @param 	integer	 	$round		- Round on decimals
  * @param 	resource 	$link 		- Link identifier
  * @return 	- Size in B / KB / MB / GB / TB
+ *
+ * function getDataBaseSize($sizeIn = 'MB', $round = 2, $link = 0);
  */
-// function getDataBaseSize($sizeIn = 'MB', $round = 2, $link = 0);
 
 echo 'Database size is: ', $db->getDataBaseSize('mb', 2), ' MB';
 
@@ -947,8 +960,9 @@ $time = '2014-06-25 14:26:03';
  * @param	string 		$rev_table	- Revision table (origin table)
  * @param	string 		$id_field	- Unique field name
  * @param	datetime	- Revision time
+ *
+ * function createTableFromRevisionTime($table, $rev_table, $id_field, $time);
  */
-// $db->createTableFromRevisionTime($table, $rev_table, $id_field, $time);
 		
 $db->createTableFromRevisionTime('rev-table' . '-' . $time, 'rev-table', 'id', $time);
 
@@ -956,8 +970,9 @@ $db->createTableFromRevisionTime('rev-table' . '-' . $time, 'rev-table', 'id', $
  * @param 	string		$table		- New table name
  * @param	string 		$id_field	- Unique field name
  * @param	datetime	- Revision time
+ *
+ * function restoreTableFromRevisionTime($table, $id_field, $time);
  */
-//$db->restoreTableFromRevisionTime($table, $id_field, $time);
 
 $db->restoreTableFromRevisionTime('rev-table', 'id', $time);
 
