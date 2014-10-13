@@ -2,7 +2,7 @@
 /******************************************************************
  * 
  * Projectname:   PHP MySQL Wrapper Class 
- * Version:       1.6
+ * Version:       1.6.1
  * Author:        Radovan Janjic <hi@radovanjanjic.com>
  * Link:          https://github.com/uzi88/PHP_MySQL_wrapper
  * Last modified: 11 08 2014
@@ -35,7 +35,7 @@ class MySQL_wrapper {
 	/** Class Version 
 	 * @var float 
 	 */
-	private $version = '1.6';
+	private $version = '1.6.1';
 	
 	/** Store the single instance
 	 * @var array
@@ -157,6 +157,16 @@ class MySQL_wrapper {
 	 */
 	private $REGEX = array('LIMIT' => '/limit[\s]+([\d]+[\s]*,[\s]*[\d]+[\s]*|[\d]+[\s]*)$/i', 'COLUMN' => '/^[a-z0-9_\-\s]+$/i');
 	
+	/** Use MySQL SELECT ... INTO OUTFILE (Default: TRUE)
+	 * @var boolean
+	 */
+	private $attachment = FALSE;
+
+	/** Use MySQL SELECT ... INTO OUTFILE (Default: TRUE)
+	 * @var boolean
+	 */
+	public $mysqlOutFile = TRUE;
+
 	/** Singleton declaration
 	 * @param 	string 		$server		- MySQL Host name 
 	 * @param 	string 		$username 	- MySQL User
@@ -636,6 +646,11 @@ class MySQL_wrapper {
 	 * @return 	- File path
 	 */
 	public function exportTable2CSV($table, $file, $columns = '*', $where = NULL, $limit = 0, $delimiter = ',', $enclosure = '"', $escape = '\\', $newLine = '\n', $showColumns = TRUE) {
+		// Without OUTFILE or as attachment
+		if ($this->attachment || !$this->mysqlOutFile) {
+			return $this->query2CSV("SELECT * FROM `$table`" . ($where ? " WHERE {$where}" : NULL) . ($limit ? " LIMIT {$limit}" : NULL), $file, $delimiter, $enclosure, $escape, $newLine, $showColumns);
+		}
+		
 		$fh = fopen($file, 'w') or $this->error("ERROR", "Can't create CSV file: {$file}");
 		if (!$fh) {
 			return FALSE;
@@ -676,6 +691,15 @@ class MySQL_wrapper {
 		return ($this->query($sql)) ? $file : FALSE;
 	}
 	
+	/** Set attachment var and return object.
+	 * @param 	void
+	 * @return 	- obj
+	 */
+	function attachment() {
+		$this->attachment = TRUE;
+		return $this;
+	}
+	
 	/** Export query to CSV file.
 	 * @param 	string 		$sql 			- MySQL Query
 	 * @param 	string		$file			- CSV File path
@@ -687,6 +711,42 @@ class MySQL_wrapper {
 	 * @return 	- File path
 	 */
 	public function query2CSV($sql, $file, $delimiter = ',', $enclosure = '"', $escape = '\\', $newLine = '\n', $showColumns = TRUE) {
+		// Without OUTFILE or as attachment
+		if ($this->attachment || !$this->mysqlOutFile) {
+			// Do query
+			$this->query($sql);
+			if ($this->affected > 0) {
+				$fh = fopen($this->attachment ? 'php://output' : $file, 'w') or $this->error("ERROR", "Can't create CSV file: {$file}");
+				if ($fh) {
+					if ($this->attachment) {
+						// Send response headers
+						header('Content-Type: text/csv');
+						header('Content-Disposition: attachment; filename="' . basename($file));
+						header('Pragma: no-cache');
+						header('Expires: 0');
+						$this->attachment = FALSE;
+					}
+					$header = FALSE;
+					while ($row = $this->fetchArray()) {
+						// CSV header / field names
+						if ($showColumns && !$header) {
+							fputcsv($fh, array_keys($row), $delimiter, $enclosure);
+							$header = TRUE;
+						}
+						fputcsv($fh, array_values($row), $delimiter, $enclosure);
+					}
+					fclose($fh);
+					return $this->affected;
+				} else {
+					return FALSE;
+				}
+			} else {
+				// No records
+				return 0;
+			}
+		}
+		
+		// Check if location is writable and unlink
 		$fh = fopen($file, 'w') or $this->error("ERROR", "Can't create CSV file: {$file}");
 		if (!$fh) {
 			return FALSE;
@@ -694,6 +754,7 @@ class MySQL_wrapper {
 		fclose($fh);
 		$file = realpath($file);
 		unlink($file);
+		
 		// Remove ; from end of query
 		$sql = trim(rtrim(trim($sql), ';'));
 		// Prepare SQL for column names
@@ -720,6 +781,85 @@ class MySQL_wrapper {
 			   "ESCAPED BY '{$this->escape($escape)}' " .
 			   "LINES TERMINATED BY '{$newLine}';";
 		return ($this->query($sql)) ? $file : FALSE;
+	}
+	
+	/** Export query to XML file or return as XML string
+	 * @param	string		$query				- mysql query
+	 * @param	string		$rootElementName	- root element name
+	 * @param	string		$childElementName	- child element name
+	 * @return	string		- XML
+	 */
+	public function query2XML($query, $rootElementName, $childElementName, $file = NULL) {
+		// Save to file or attachment
+		if ($this->attachment || !empty($file)) { //echo $file; exit;
+			$fh = fopen($this->attachment ? 'php://output' : $file, 'w') or $this->error("ERROR", "Can't create XML file: {$file}");
+			if (!$fh) {
+				return FALSE;
+			} elseif ($this->attachment) {
+				// Send response headers
+				header('Content-Type: text/xml');
+				header('Content-Disposition: attachment; filename="' . basename($file));
+				header('Pragma: no-cache');
+				header('Expires: 0');
+				$this->attachment = FALSE;
+			} else {
+				$file = realpath($file);
+			}
+			$saveToFile = TRUE;
+		} else {
+			$saveToFile = FALSE;
+		}
+		
+		// Do query
+		$r = $this->query($query);
+		
+		// XML header
+		if ($saveToFile) {
+			fputs($fh, "<?xml version=\"1.0\" encoding=\"" . strtoupper($this->charset) . "\" ?>" . PHP_EOL . "<{$rootElementName}>" . PHP_EOL);
+		} else {
+			$xml = "<?xml version=\"1.0\" encoding=\"" . strtoupper($this->charset) . "\" ?>" . PHP_EOL;
+			$xml .= "<{$rootElementName}>" . PHP_EOL;
+		}
+		
+		// Query rows
+		while ($row = $this->call('fetch_object', $r)) {
+			// Create the first child element
+			$record = "\t<{$childElementName}>" . PHP_EOL;
+			for ($i = 0; $i < $this->call('num_fields', $r); $i++) {
+				// Different methods of getting field name for mysql and mysqli
+				if ($this->extension == 'mysql') {
+					$fieldName = $this->call('field_name', $r, $i);
+				} elseif ($this->extension == 'mysqli') {
+					$colObj = $this->call('fetch_field_direct', $r, $i);                            
+					$fieldName = $colObj->name;
+				}
+				// The child will take the name of the result column name
+				$record .= "\t\t<{$fieldName}>";
+				// Set empty columns with NULL and escape XML entities
+				if (!empty($row->$fieldName)) {
+					$record .= htmlspecialchars($row->$fieldName, ENT_XML1);
+				} else {
+					$record .= NULL; 
+				}
+				$record .= "</{$fieldName}>" . PHP_EOL;
+			}
+			$record .= "\t</{$childElementName}>" . PHP_EOL;
+			if ($saveToFile) {
+				fputs($fh, $record);
+			} else {
+				$xml .= $record;
+			}
+		}
+		
+		// Output
+		if ($saveToFile) {
+			fputs($fh, "</{$rootElementName}>" . PHP_EOL);
+			fclose($fh);
+			return TRUE;
+		} else {
+			$xml .= "</{$rootElementName}>" . PHP_EOL;
+			return $xml;
+		}
 	}
 	
 	/** Create table from CSV file and imports CSV data to Table with possibility to update rows while import.
@@ -876,78 +1016,7 @@ class MySQL_wrapper {
 	public function deleteRow($table, $where = NULL, $limit = 0) {
 		return $this->query("DELETE FROM `{$table}`" . ($where ? " WHERE {$where}" : NULL) . ($limit ? " LIMIT {$limit}" : NULL) . ";") ? $this->affected : FALSE;
 	}
-	
-	/** Export query to XML file or return as XML string
-	 * @param	string		$query				- mysql query
-	 * @param	string		$rootElementName	- root element name
-	 * @param	string		$childElementName	- child element name
-	 * @return	string		- XML
-	 */
-	public function query2XML($query, $rootElementName, $childElementName, $file = NULL) {
-		// Save to file
-		if (!empty($file)) {
-			$fh = fopen($file, 'w') or $this->error("ERROR", "Can't create XML file: {$file}");
-			if (!$fh) {
-				return FALSE;
-			}
-			fclose($fh);
-			$file = realpath($file);
-			$saveToFile = TRUE;
-		} else {
-			$saveToFile = FALSE;
-		}
 		
-		// Do query
-		$r = $this->query($query);
-		
-		// XML header
-		if ($saveToFile) {
-			file_put_contents($file, "<?xml version=\"1.0\" encoding=\"" . strtoupper($this->charset) . "\" ?>" . PHP_EOL . "<{$rootElementName}>" . PHP_EOL, LOCK_EX);
-		} else {
-			$xml = "<?xml version=\"1.0\" encoding=\"" . strtoupper($this->charset) . "\" ?>" . PHP_EOL;
-			$xml .= "<{$rootElementName}>" . PHP_EOL;
-		}
-		
-		// Query rows
-		while ($row = $this->call('fetch_object', $r)) {
-			// Create the first child element
-			$record = "\t<{$childElementName}>" . PHP_EOL;
-			for ($i = 0; $i < $this->call('num_fields', $r); $i++) {
-				// Different methods of getting field name for mysql and mysqli
-				if ($this->extension == 'mysql') {
-					$fieldName = $this->call('field_name', $r, $i);
-				} elseif ($this->extension == 'mysqli') {
-					$colObj = $this->call('fetch_field_direct', $r, $i);                            
-					$fieldName = $colObj->name;
-				}
-				// The child will take the name of the result column name
-				$record .= "\t\t<{$fieldName}>";
-				// Set empty columns with NULL and escape XML entities
-				if (!empty($row->$fieldName)) {
-					$record .= htmlspecialchars($row->$fieldName, ENT_XML1);
-				} else {
-					$record .= NULL; 
-				}
-				$record .= "</{$fieldName}>" . PHP_EOL;
-			}
-			$record .= "\t</{$childElementName}>" . PHP_EOL;
-			if ($saveToFile) {
-				file_put_contents($file, $record, FILE_APPEND | LOCK_EX);
-			} else {
-				$xml .= $record;
-			}
-		}
-		
-		// Output
-		if ($saveToFile) {
-			file_put_contents($file, "</{$rootElementName}>" . PHP_EOL, FILE_APPEND | LOCK_EX);
-			return TRUE;
-		} else {
-			$xml .= "</{$rootElementName}>" . PHP_EOL;
-			return $xml; 
-		}
-	}
-	
 	/** Replace all occurrences of the search string with the replacement string in MySQL Table Column(s).
 	 * @param 	string		$table 	 - Table name or "*" to replace in whole db
 	 * @param 	mixed 		$columns - Search & Replace affected Table columns. An array may be used to designate multiple replacements.

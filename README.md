@@ -25,11 +25,14 @@ This class implements a generic MySQL database access wrapper.
 * [Operations with CSV files](#operations-with-csv-files)
  * [Export table to CSV](#export-table-to-csv)
  * [Export query to CSV](#export-query-to-csv)
+ * [Export table / export query to CSV using fputcsv](#export-table-export-query-to-csv-using-fputcsv)
+ * [Download CSV file from query](#download-csv-file-from-query)
  * [Import CSV to Table](#import-csv-to-table)
  * [Import and update CSV to Table](#import-and-update-csv-to-table)
  * [Create table from CSV file](#create-table-from-csv-file)
 * [Operations with XML files](#operations-with-xml-files)
  * [Export query to XML](#export-query-to-xml)
+ * [Download XML file from query](#download-xml-file-from-query)
 * [Do str_replace in given database, table or defined columns in table](#string-search-and-replace-in-all-or-defined-table-columns)
  * [Search string & replace string](#string-search-and-replace-in-all-or-defined-table-columns)
  * [Search array & replace string](#string-search-and-replace-in-all-or-defined-table-columns)
@@ -656,6 +659,40 @@ $path = $db->query2CSV('select * from `table` limit 2,2', 'test_files/test-query
 $db->close();
 ```
 
+#### Export table / export query to CSV using fputcsv
+```php
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect
+$db->connect();
+
+// Don't use mysql outfile
+$db->mysqlOutFile = FALSE;
+
+// Table to CSV
+$db->exportTable2CSV('table', 'test_files/test-1.txt');
+
+// Query to CSV
+$path = $db->query2CSV('select * from `table` limit 10', 'test_files/test-query2csv.csv');
+
+// Close connection
+$db->close();
+```
+
+#### Download CSV file from query
+```php
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect
+$db->connect();
+
+// Set as attachment and execute
+$db->attachment()->query2CSV('select * from `table`', 'test.csv');
+
+// Close connection
+$db->close();
+```
+
 #### Import CSV to Table
 ```php
 $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
@@ -773,6 +810,20 @@ $xml = $db->query2XML('select * from `table` limit 10', 'items', 'item');
  *
  * function query2XML($query, $rootElementName, $childElementName, $file = NULL);
  */
+
+// Close connection
+$db->close();
+```
+
+#### Download XML file from query
+```php
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect
+$db->connect();
+
+// Set as attachment and execute
+$db->attachment()->query2XML('select * from `table`', 'root', 'item', 'test.xml');
 
 // Close connection
 $db->close();
