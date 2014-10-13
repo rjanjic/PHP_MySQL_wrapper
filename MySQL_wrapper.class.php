@@ -738,9 +738,11 @@ class MySQL_wrapper {
 					fclose($fh);
 					return $this->affected;
 				} else {
+					$this->attachment = FALSE;
 					return FALSE;
 				}
 			} else {
+				$this->attachment = FALSE;
 				// No records
 				return 0;
 			}
