@@ -25,7 +25,7 @@ This class implements a generic MySQL database access wrapper.
 * [Operations with CSV files](#operations-with-csv-files)
  * [Export table to CSV](#export-table-to-csv)
  * [Export query to CSV](#export-query-to-csv)
- * [Export table / export query to CSV using fputcsv](#export-table-export-query-to-csv-using-fputcsv)
+ * [Export table / export query to CSV using fputcsv](#export-table--export-query-to-csv-using-fputcsv)
  * [Download CSV file from query](#download-csv-file-from-query)
  * [Import CSV to Table](#import-csv-to-table)
  * [Import and update CSV to Table](#import-and-update-csv-to-table)
