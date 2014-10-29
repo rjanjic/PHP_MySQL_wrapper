@@ -1136,3 +1136,34 @@ Query fail: SELECT * FROM `table` asfd!@#$
 - Error: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '!@#$' at line 1
 - Call: Function query in C:\xampp\htdocs\Git\PHP_MySQL_wrapper\test.php on line 29
 ```
+
+Draw result / describe table / explain query:
+
+```php
+$db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
+
+// Connect
+$db->connect(); 
+
+// Draw query result data in table
+$array = $db->fetchQueryToArray('SELECT * FROM `table` LIMIT 10;');
+$db->drawTable($array, 'Test table contents');
+
+/** Draw ascii table
+ * @param	array	$data	- Multidimensional array of data
+ * @param	string	$title	- Table header
+ * @return	void
+ *
+ * function drawTable($data, $title = NULL);
+ */
+
+// Draw query execution plan in table
+$db->explain('SELECT * FROM `table`;');
+ 
+// Draw information about the columns in a table
+$db->describe('table');
+
+// Close connection
+$db->close(); 
+```
+
