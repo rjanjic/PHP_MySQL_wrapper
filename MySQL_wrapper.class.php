@@ -5,7 +5,7 @@
  * Version:       1.6.1
  * Author:        Radovan Janjic <hi@radovanjanjic.com>
  * Link:          https://github.com/uzi88/PHP_MySQL_wrapper
- * Last modified: 11 08 2014
+ * Last modified: 29 10 2014
  * Copyright (C): 2008-2014 IT-radionica.com, All Rights Reserved
  * 
  * GNU General Public License (Version 2, June 1991)
@@ -35,7 +35,7 @@ class MySQL_wrapper {
 	/** Class Version 
 	 * @var float 
 	 */
-	private $version = '1.6.1';
+	private $version = '1.6.2';
 	
 	/** Store the single instance
 	 * @var array
@@ -102,6 +102,11 @@ class MySQL_wrapper {
 	 */
 	public $affected = 0;
 	
+	/** Previous query
+	 * @var string
+	 */
+	public $prevQuery = NULL;
+
 	/** Log Queries to file (Default: FALSE)
 	 * @var boolean
 	 */
@@ -135,7 +140,7 @@ class MySQL_wrapper {
 	/** Log Date Format (Default: Y-m-d H:i:s)
 	 * @var string
 	 */
-	public $dateFormat	= 'Y-m-d H:i:s';
+	public $dateFormat = 'Y-m-d H:i:s';
 	
 	/** Log File Path (Default: log-mysql.txt)
 	 * @var string
@@ -337,10 +342,15 @@ class MySQL_wrapper {
 			$sql = str_replace($p['search'], $p['replace'], $sql);
 			unset($l, $p);
 		}
-		if ($this->logQueries) $start = $this->getMicrotime();
+		if ($this->logQueries) {
+			$start = $this->getMicrotime();
+		}
+		$this->prevQuery = $sql;
 		$this->query = $this->call('query', $sql) or $this->error("Query fail: " . $sql);
 		$this->affected = $this->call('affected_rows');
-		if ($this->query && $this->logQueries) $this->log('QUERY', "EXEC -> " . number_format($this->getMicrotime() - $start, 8) . " -> " . $sql);
+		if ($this->query && $this->logQueries) {
+			$this->log('QUERY', "EXEC -> " . number_format($this->getMicrotime() - $start, 8) . " -> " . $sql);
+		}
 		return $this->query ? $this->query : FALSE;
 	}
 	
@@ -1359,6 +1369,95 @@ class MySQL_wrapper {
 				return "Function {$t['function']} in {$t['file']} on line {$t['line']}";
 			}
 		}
+	}
+
+	/** Draw table with explain 
+	 * @param	string	$sql	- MySQL query
+	 * @return	void
+	 */
+	public function explain($sql) {
+		$data = $this->db->fetchQueryToArray('EXPLAIN ' . $sql);
+		$this->drawTable($data, 'Explain MySQL Query');
+	}
+
+	/** Draw table with describe 
+	 * @param	string	$table	- Table name
+	 * @return	void
+	 */
+	public function describe($table) {
+		$data = $this->db->fetchQueryToArray('DESCRIBE `' . $table . '`;');
+		$this->drawTable($data, $table);
+	}
+	
+	/** Draw ascii table
+	 * @param	array	$data	- Multidimensional array of data
+	 * @param	string	$title	- Table header
+	 * @return	void
+	 */
+	public function drawTable($data, $title = NULL) {
+		// No data
+		if (empty($data) {
+			return FALSE;
+		}
+		// Use array keys for fild names
+		$h = array_keys($data[0]);
+		$header = array();
+		foreach ($h as $name) {
+			$header[$name] = $name;
+		}
+		// Prepend header
+		array_unshift($data, $header);
+		// Find max strlen
+		$p = array();
+		$l = array();
+		foreach ($data as $elm) {
+			foreach ($elm as $key => $val) {
+				// Define index
+				if (!isset($l[$key], $l[$key])) {
+					$l[$key] = 0;
+					$p[$key] = 0;
+				}
+				// Find max
+				$l[$key] = strlen($val);
+				if ($l[$key] > $p[$key]) {
+					$p[$key] = $l[$key];
+				}
+			}
+		}
+		// Return data
+		$ret = array();
+		// Header
+		if (!empty($title)) {
+			$ret[] = '+-' . str_pad(NULL, array_sum($p) + ((count($p) -1) * 3 ), '-') . '-+';
+			$ret[] = '| ' . str_pad($title, array_sum($p) + ((count($p) -1) * 3 ), ' ', STR_PAD_BOTH) . ' |';
+		}
+		// Line
+		$r = array();
+		foreach ($p as $k) {
+			$r[] =  str_pad(NULL, $k, '-');
+		}
+		$line = '+-' . implode($r, '-+-') . '-+';
+		// Before line
+		$ret[] = $line;
+		$header = 0;
+		// Table values
+		foreach ($data as $row) {
+			// Data row
+			$r = array();
+			foreach ($row as $key => $val) {
+				$r[] = str_pad($val, $p[$key], ' ', is_numeric($val) ? STR_PAD_LEFT : STR_PAD_RIGHT);
+			}
+			$ret[] = '| ' . implode($r, ' | ') . ' |';
+			// Fields header
+			if ($header == 0) {
+				$ret[] = $line;
+				$header = 1;
+			}
+		}
+		// Last line
+		$ret[] = $line;
+		// Print table
+		echo '<pre>', htmlspecialchars(implode($ret, PHP_EOL), ENT_QUOTES), '</pre>';
 	}
 	
 	/** Get Microtime
