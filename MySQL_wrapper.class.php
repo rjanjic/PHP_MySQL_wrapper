@@ -1376,7 +1376,7 @@ class MySQL_wrapper {
 	 * @return	void
 	 */
 	public function explain($sql) {
-		$data = $this->db->fetchQueryToArray('EXPLAIN ' . $sql);
+		$data = $this->fetchQueryToArray('EXPLAIN ' . $sql);
 		$this->drawTable($data, 'Explain MySQL Query');
 	}
 
@@ -1385,10 +1385,10 @@ class MySQL_wrapper {
 	 * @return	void
 	 */
 	public function describe($table) {
-		$data = $this->db->fetchQueryToArray('DESCRIBE `' . $table . '`;');
+		$data = $this->fetchQueryToArray('DESCRIBE `' . $table . '`;');
 		$this->drawTable($data, $table);
 	}
-	
+
 	/** Draw ascii table
 	 * @param	array	$data	- Multidimensional array of data
 	 * @param	string	$title	- Table header
@@ -1396,7 +1396,7 @@ class MySQL_wrapper {
 	 */
 	public function drawTable($data, $title = NULL) {
 		// No data
-		if (empty($data) {
+		if (empty($data)) {
 			return FALSE;
 		}
 		// Use array keys for fild names
