@@ -1146,7 +1146,7 @@ $db = MySQL_wrapper::getInstance(MySQL_HOST, MySQL_USER, MySQL_PASS, MySQL_DB);
 $db->connect(); 
 
 // Draw query result data in table
-$array = $db->fetchQueryToArray('SELECT * FROM `table` LIMIT 10;');
+$array = $db->fetchQueryToArray('SELECT * FROM `table` LIMIT 2;');
 $db->drawTable($array, 'Test table contents');
 
 /** Draw ascii table
@@ -1166,4 +1166,33 @@ $db->describe('table');
 // Close connection
 $db->close(); 
 ```
+
+Draw table output:
+
+```
++---------------------------------------------------------------+
+|                      Test table contents                      |
++----+-----------+---------+-----------------------+------------+
+| id | firstname | surname | email                 | date       |
++----+-----------+---------+-----------------------+------------+
+|  1 | foo       | bar     | rade@it-radionica.com | 2014-10-02 |
+|  2 | Radovan   | Janjic  | rade@it-radionica.com | 2014-10-02 |
++----+-----------+---------+-----------------------+------------+
++--------------------------------------------------------------------------------------+
+|                                 Explain MySQL Query                                  |
++----+-------------+-------+------+---------------+-----+---------+-----+------+-------+
+| id | select_type | table | type | possible_keys | key | key_len | ref | rows | Extra |
++----+-------------+-------+------+---------------+-----+---------+-----+------+-------+
+|  1 | SIMPLE      | table | ALL  |               |     |         |     |   98 |       |
++----+-------------+-------+------+---------------+-----+---------+-----+------+-------+
++------------------------------------------------------------------+
+|                               test                               |
++-----------+--------------+------+-----+---------+----------------+
+| Field     | Type         | Null | Key | Default | Extra          |
++-----------+--------------+------+-----+---------+----------------+
+| id        | int(11)      | NO   | PRI |         | auto_increment |
+| firstname | varchar(100) | NO   |     |         |                |
+| surname   | varchar(100) | NO   |     |         |                |
++-----------+--------------+------+-----+---------+----------------+
+``` 
 
